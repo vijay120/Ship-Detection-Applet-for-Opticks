@@ -49,6 +49,20 @@
 #include <algorithm>
 #include "SpatialDataView.h"
 #include "SpatialDataWindow.h"
+#include <sstream>
+#include <string>
+#include <math.h>
+#include <QtCore/QStringList>
+#include <QtGui/QInputDialog>
+using namespace std;
+
+
+
+
+
+
+
+double long pi=3.14159265;
 
 
 
@@ -68,6 +82,27 @@ namespace
 	  total_sum += pData * pData;
 	  count+=1;
    }
+
+   double long threshold_calculator(double long PFA)
+   {
+	   double long g = 1-2*PFA;
+	   double long f = sqrt(2*pi)*0.5*(g+((pi/12)*g*g*g)+(((7*pi*pi)/480)*g*g*g*g*g));
+	   return f;
+   }
+
+   string sconverter(int i)
+   {
+	std::string s;
+	std::stringstream out;
+	out << i;
+	s = out.str();
+	return s;
+   }
+
+
+
+
+
 
 
 CFAR::CFAR()
@@ -95,7 +130,7 @@ bool CFAR::getInputSpecification(PlugInArgList* &pInArgList)
    return true;
 }
 
-bool CFAR::getOutputSpecification(PlugInArgList*& pOutArgList)
+bool CFAR::getOutputSpecification(PlugInArgList* &pOutArgList)
 {
    VERIFY(pOutArgList = Service<PlugInManagerServices>()->getPlugInArgList());
    pOutArgList->addArg<double>("Result", NULL);
@@ -104,7 +139,7 @@ bool CFAR::getOutputSpecification(PlugInArgList*& pOutArgList)
 
 bool CFAR::execute(PlugInArgList* pInArgList, PlugInArgList* pOutArgList)
 {
-   StepResource pStep("CFAR", "app", "27170298-10CE-4H6C-AD7A-97E8058C27FF");
+   StepResource pStep("CFAR", "app5", "14530294-1F98-486A-9336-B7AC7DC768FB");
    if (pInArgList == NULL || pOutArgList == NULL)
    {
       return false;
@@ -125,12 +160,16 @@ bool CFAR::execute(PlugInArgList* pInArgList, PlugInArgList* pOutArgList)
    RasterDataDescriptor* pDesc = static_cast<RasterDataDescriptor*>(pCube->getDataDescriptor());
    VERIFY(pDesc != NULL);
    FactoryResource<DataRequest> pRequest;
+   FactoryResource<DataRequest> pRequest2;
+
    pRequest->setInterleaveFormat(BSQ);
+   pRequest2->setInterleaveFormat(BSQ);
    DataAccessor pAcc = pCube->getDataAccessor(pRequest.release());
-   DataAccessor pAcc2 = pCube->getDataAccessor(pRequest.release());
+   DataAccessor pAcc2 = pCube->getDataAccessor(pRequest2.release());
 
    ModelResource<RasterElement> pResultCube(RasterUtilities::createRasterElement(pCube->getName() +
    "CFAR result", pDesc->getRowCount(), pDesc->getColumnCount(), pDesc->getDataType()));
+
    if (pResultCube.get() == NULL)
    {
       std::string msg = "A raster cube could not be created.";
@@ -162,12 +201,26 @@ bool CFAR::execute(PlugInArgList* pInArgList, PlugInArgList* pOutArgList)
    int prevRow = 0;
    int nextCol = 0;
    int nextRow = 0;
-   double threshold = 0.1;
-   int DEPTH = 5;
+   double long PFA = 0.0;
+   unsigned int DEPTH = 2;
    int count=0;
+   unsigned int zero=0;
+
+   QStringList Names("0.000001");
+   QString value = QInputDialog::getItem(Service<DesktopServices>()->getMainWidget(),
+            "Input a PFA", "Input a PFA as a DOUBLE", Names);
+   
+   std::string strAoi = value.toStdString();
+   std::istringstream stm;
+   stm.str(strAoi);
+   stm >> PFA;
+   
+
+   double long threshold = threshold_calculator(PFA);
 
    for (unsigned int row = 0; row < rowSize; ++row)
    {
+
       if (isAborted())
       {
          std::string msg = getName() + " has been aborted.";
@@ -195,70 +248,26 @@ bool CFAR::execute(PlugInArgList* pInArgList, PlugInArgList* pOutArgList)
       {
          pProgress->updateProgress("Calculating statistics", row * 100 / pDesc->getRowCount(), NORMAL);
       }
+	  		
+	  
 
       for (unsigned int col = 0; col < colSize; ++col)
       {
 
-			if(col-DEPTH>0)
-			{
-				westCol=col-DEPTH;
-			}
-			else
-				westCol=0;
-
-			if(row-DEPTH>0)
-			{
-				northRow=row-DEPTH;
-			}
-			else
-				northRow=0;
-
-			if(col+DEPTH>colSize-1)
-			{
-				eastCol=colSize-1;
-			}
-			else
-				eastCol=col+DEPTH;
-
-			if(row+DEPTH>rowSize-1)
-			{
-				southRow=rowSize-1;
-			}
-			else
-				southRow=row+DEPTH;
-
-			if(col-1>0)
-			{
-				prevCol=col-1;
-			}
-			else
-				prevCol=0;
-
-			if(row-1>0)
-			{
-				prevRow=row-1;
-			}
-			else
-				prevRow=0;
-
-			if(col+1>colSize-1)
-			{
-				nextCol=colSize-1;
-			}
-			else
-				nextCol=col+1;
-
-			if(row+1>rowSize-1)
-			{
-				nextRow=rowSize-1;
-			}
-			else
-				nextRow=row+1;
+		  westCol=max(col-DEPTH,zero);
+		  northRow=max(row-DEPTH,zero);
+		  eastCol=min(colSize-1,col+DEPTH);
+		  southRow=min(rowSize-1,row+DEPTH);
+		  prevCol=max(col-1,zero);
+		  prevRow=max(row-1,zero);
+		  nextCol=min(col+1,colSize-1);
+		  nextRow=min(row+1,rowSize-1);
 
 			pAcc2->toPixel(northRow,westCol);
 			
 			for(unsigned int row1=northRow; row1 < southRow+1; ++row1)
 			{
+								
 				for (unsigned int col1=westCol; col1 < eastCol+1; ++col1)
 				{
 					if(((col1==prevCol)&&(row1==prevRow)) ||
@@ -278,7 +287,6 @@ bool CFAR::execute(PlugInArgList* pInArgList, PlugInArgList* pOutArgList)
 					{	   
 					updateStatistics2(pAcc2->getColumnAsDouble(), total, total_sum, count);
 					}
-
 					pAcc2->nextColumn();
 
 				}
@@ -290,17 +298,22 @@ bool CFAR::execute(PlugInArgList* pInArgList, PlugInArgList* pOutArgList)
 			std = sqrt(total_sum / count - mean * mean);
 			pAcc2->toPixel(row,col);
 			pDestAcc->toPixel(row,col);
-			zstatistic = abs((pAcc2->getColumnAsDouble()-mean))/std;
+			zstatistic = (pAcc2->getColumnAsDouble()-mean)/std;
+				std::string s;
+				std::stringstream out;
+				out << zstatistic;
+				s = out.str();
+	
+			pProgress->updateProgress(s,threshold, ERRORS);
 			if(zstatistic>threshold)
-			{
-				switchOnEncoding(pDesc->getDataType(), conversion, pDestAcc->getColumn(), 0.0);
-			}
-
-			else
 			{
 				switchOnEncoding(pDesc->getDataType(), conversion, pDestAcc->getColumn(), 1000.0);
 			}
 
+			else
+			{
+				switchOnEncoding(pDesc->getDataType(), conversion, pDestAcc->getColumn(), 0.0);
+			}
 
 			total = 0.0;
             total_sum = 0.0;
@@ -346,4 +359,5 @@ bool CFAR::execute(PlugInArgList* pInArgList, PlugInArgList* pOutArgList)
 
    pStep->finalize();
    return true;
+   
 }
