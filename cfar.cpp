@@ -185,40 +185,42 @@ bool CFAR::execute(PlugInArgList* pInArgList, PlugInArgList* pOutArgList)
    DataAccessor pDestAcc = pResultCube->getDataAccessor(pResultRequest.release());
   
    int tester_count = 0;
-   unsigned int eastCol = 0;
-   unsigned int northRow = 0;
-   unsigned int westCol = 0;
-   unsigned int southRow = 0;
+   int eastCol = 0;
+   int northRow = 0;
+   int westCol = 0;
+   int southRow = 0;
    double zstatistic = 0;
    double total = 0.0;
    double total_sum = 0.0;
    double mean = 0.0;
    double std = 0.0;
    double a=0;
-   unsigned int rowSize=pDesc->getRowCount();
-   unsigned int colSize=pDesc->getColumnCount();
+   int rowSize=pDesc->getRowCount();
+   int colSize=pDesc->getColumnCount();
    int prevCol = 0;
    int prevRow = 0;
    int nextCol = 0;
    int nextRow = 0;
    double long PFA = 0.0;
-   unsigned int DEPTH = 2;
+   int DEPTH = 10;
    int count=0;
-   unsigned int zero=0;
+   int zero=0;
 
-   QStringList Names("0.000001");
+   QStringList Names("5.0");
    QString value = QInputDialog::getItem(Service<DesktopServices>()->getMainWidget(),
-            "Input a PFA", "Input a PFA as a DOUBLE", Names);
+            "Input a threshold value", "Input a threshold (eg. 5.5)", Names);
    
    std::string strAoi = value.toStdString();
    std::istringstream stm;
    stm.str(strAoi);
-   stm >> PFA;
+   //stm >> PFA;
+   double long threshold = 0;
+   stm >> threshold;
    
 
-   double long threshold = threshold_calculator(PFA);
+   //double long threshold = threshold_calculator(PFA);
 
-   for (unsigned int row = 0; row < rowSize; ++row)
+   for (int row = 0; row < rowSize; ++row)
    {
 
       if (isAborted())
@@ -251,7 +253,7 @@ bool CFAR::execute(PlugInArgList* pInArgList, PlugInArgList* pOutArgList)
 	  		
 	  
 
-      for (unsigned int col = 0; col < colSize; ++col)
+      for (int col = 0; col < colSize; ++col)
       {
 
 		  westCol=max(col-DEPTH,zero);
@@ -265,10 +267,10 @@ bool CFAR::execute(PlugInArgList* pInArgList, PlugInArgList* pOutArgList)
 
 			pAcc2->toPixel(northRow,westCol);
 			
-			for(unsigned int row1=northRow; row1 < southRow+1; ++row1)
+			for(int row1=northRow; row1 < southRow+1; ++row1)
 			{
 								
-				for (unsigned int col1=westCol; col1 < eastCol+1; ++col1)
+				for (int col1=westCol; col1 < eastCol+1; ++col1)
 				{
 					if(((col1==prevCol)&&(row1==prevRow)) ||
 						((col1==col)&&(row1==prevRow)) ||
@@ -304,7 +306,7 @@ bool CFAR::execute(PlugInArgList* pInArgList, PlugInArgList* pOutArgList)
 				out << zstatistic;
 				s = out.str();
 	
-			pProgress->updateProgress(s,threshold, ERRORS);
+			//pProgress->updateProgress(s,threshold, ERRORS);
 			if(zstatistic>threshold)
 			{
 				switchOnEncoding(pDesc->getDataType(), conversion, pDestAcc->getColumn(), 1000.0);
