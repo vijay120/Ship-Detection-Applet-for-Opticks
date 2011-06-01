@@ -291,7 +291,7 @@ bool MORPH::execute(PlugInArgList* pInArgList, PlugInArgList* pOutArgList)
 
 
 
-	  
+	  pDestAcc2->toPixel(row,col);
 
       if(count>threshold)
 	  {
