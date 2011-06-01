@@ -23,7 +23,7 @@
 #include "RasterElement.h"
 #include "StringUtilities.h"
 #include "switchOnEncoding.h"
-#include "CFAR.h"
+#include "MORPH.h"
 #include <limits>
 #include "AoiElement.h"
 #include "AppConfig.h"
@@ -58,15 +58,7 @@ using namespace std;
 
 
 
-
-
-
-
-double long pi=3.14159265;
-
-
-
-REGISTER_PLUGIN_BASIC(OpticksTutorial, CFAR);
+REGISTER_PLUGIN_BASIC(OpticksTutorial, MORPH);
 
 namespace
 {
@@ -76,39 +68,12 @@ namespace
 	   *pData=number;
    }
 };
-   void updateStatistics2(double pData, double& total, double& total_sum, int& count)
-   {
-      total += pData;
-	  total_sum += pData * pData;
-	  count+=1;
-   }
-
-   double long threshold_calculator(double long PFA)
-   {
-	   double long g = 1-2*PFA;
-	   double long f = sqrt(2*pi)*0.5*(g+((pi/12)*g*g*g)+(((7*pi*pi)/480)*g*g*g*g*g));
-	   return f;
-   }
-
-   string sconverter(int i)
-   {
-	std::string s;
-	std::stringstream out;
-	out << i;
-	s = out.str();
-	return s;
-   }
 
 
-
-
-
-
-
-CFAR::CFAR()
+MORPH::MORPH()
 {
-   setDescriptorId("{3A013609-051D-4AE9-876E-6D3EA5DE0153}");
-   setName("CFAR");
+   setDescriptorId("{F3CBF6C1-E3E5-4908-9280-BE94008DD021}");
+   setName("MORPH");
    setDescription("Accessing cube data.");
    setCreator("Opticks Community");
    setVersion("Sample");
@@ -116,30 +81,30 @@ CFAR::CFAR()
    setProductionStatus(false);
    setType("Sample");
    setSubtype("Statistics");
-   setMenuLocation("[Tutorial]/CFAR");
+   setMenuLocation("[Tutorial]/MORPH");
    setAbortSupported(true);
 }
 
 
 
-bool CFAR::getInputSpecification(PlugInArgList* &pInArgList)
+bool MORPH::getInputSpecification(PlugInArgList* &pInArgList)
 {
    VERIFY(pInArgList = Service<PlugInManagerServices>()->getPlugInArgList());
    pInArgList->addArg<Progress>(Executable::ProgressArg(), NULL, "Progress reporter");
-   pInArgList->addArg<RasterElement>(Executable::DataElementArg(), "CFAR detection of image");
+   pInArgList->addArg<RasterElement>(Executable::DataElementArg(), "MORPH processing of image");
    return true;
 }
 
-bool CFAR::getOutputSpecification(PlugInArgList* &pOutArgList)
+bool MORPH::getOutputSpecification(PlugInArgList* &pOutArgList)
 {
    VERIFY(pOutArgList = Service<PlugInManagerServices>()->getPlugInArgList());
    pOutArgList->addArg<double>("Result", NULL);
    return true;
 }
 
-bool CFAR::execute(PlugInArgList* pInArgList, PlugInArgList* pOutArgList)
+bool MORPH::execute(PlugInArgList* pInArgList, PlugInArgList* pOutArgList)
 {
-   StepResource pStep("CFAR", "app5", "14530294-1F98-486A-9336-B7AC7DC768FB");
+   StepResource pStep("MORPH", "app8", "7F2FE71B-794C-4AC3-B3E7-0B44B3B4A9EE");
    if (pInArgList == NULL || pOutArgList == NULL)
    {
       return false;
@@ -168,7 +133,7 @@ bool CFAR::execute(PlugInArgList* pInArgList, PlugInArgList* pOutArgList)
    DataAccessor pAcc2 = pCube->getDataAccessor(pRequest2.release());
 
    ModelResource<RasterElement> pResultCube(RasterUtilities::createRasterElement(pCube->getName() +
-   "CFAR result", pDesc->getRowCount(), pDesc->getColumnCount(), pDesc->getDataType()));
+   "MORPH result", pDesc->getRowCount(), pDesc->getColumnCount(), pDesc->getDataType()));
 
    if (pResultCube.get() == NULL)
    {
@@ -182,39 +147,36 @@ bool CFAR::execute(PlugInArgList* pInArgList, PlugInArgList* pOutArgList)
    }
    FactoryResource<DataRequest> pResultRequest;
    pResultRequest->setWritable(true);
-   DataAccessor pDestAcc = pResultCube->getDataAccessor(pResultRequest.release());
+   DataAccessor pDestAcc2 = pResultCube->getDataAccessor(pResultRequest.release());
   
-   int tester_count = 0;
-   int eastCol = 0;
-   int northRow = 0;
-   int westCol = 0;
-   int southRow = 0;
-   double zstatistic = 0;
-   double total = 0.0;
-   double total_sum = 0.0;
-   double mean = 0.0;
-   double std = 0.0;
-   double a=0;
+   int upperLeftVal = 0;
+   int upVal = 0;
+   int upperRightVal = 0;
+   int leftVal = 0;
+   int rightVal = 0;
+   int lowerLeftVal = 0;
+   int downVal = 0;
+   int lowerRightVal = 0;
+
    int rowSize=pDesc->getRowCount();
    int colSize=pDesc->getColumnCount();
    int prevCol = 0;
    int prevRow = 0;
    int nextCol = 0;
    int nextRow = 0;
-   double long PFA = 0.0;
-   int DEPTH = 10;
    int count=0;
    int zero=0;
+   int threshold = 0;
 
-   QStringList Names("5.0");
+   QStringList Names("1");
    QString value = QInputDialog::getItem(Service<DesktopServices>()->getMainWidget(),
-            "Input a threshold value", "Input a threshold (eg. 5.5)", Names);
+            "Input a threshold value", "Input a threshold", Names);
    
    std::string strAoi = value.toStdString();
    std::istringstream stm;
    stm.str(strAoi);
    //stm >> PFA;
-   double long threshold = 0;
+   
    stm >> threshold;
    
 
@@ -255,73 +217,93 @@ bool CFAR::execute(PlugInArgList* pInArgList, PlugInArgList* pOutArgList)
 
       for (int col = 0; col < colSize; ++col)
       {
-
-		  westCol=max(col-DEPTH,zero);
-		  northRow=max(row-DEPTH,zero);
-		  eastCol=min(colSize-1,col+DEPTH);
-		  southRow=min(rowSize-1,row+DEPTH);
 		  prevCol=max(col-1,zero);
 		  prevRow=max(row-1,zero);
 		  nextCol=min(col+1,colSize-1);
 		  nextRow=min(row+1,rowSize-1);
 
-			pAcc2->toPixel(northRow,westCol);
-			
-			for(int row1=northRow; row1 < southRow+1; ++row1)
-			{
-								
-				for (int col1=westCol; col1 < eastCol+1; ++col1)
-				{
-					if(((col1==prevCol)&&(row1==prevRow)) ||
-						((col1==col)&&(row1==prevRow)) ||
-						((col1==nextCol)&&(row1==prevRow)) ||
-						((col1==prevCol)&&(row1==row)) ||
-						((col1==nextCol)&&(row1==row)) ||
-						((col1==prevCol)&&(row1==nextRow)) ||
-						((col1==col)&&(row1==nextRow)) ||
-						((col1==nextCol)&&(row1==nextRow)) ||
-						((col1==col)&&(row1==row)))
-					{
-						continue;
-					}
+	  pAcc2->toPixel(prevRow, prevCol);
+      upperLeftVal = pAcc2->getColumnAsDouble();
+	  	  if(upperLeftVal>0)
+	  {
+			  count+=1;
+	  }
 
-					else
-					{	   
-					updateStatistics2(pAcc2->getColumnAsDouble(), total, total_sum, count);
-					}
-					pAcc2->nextColumn();
+	  
 
-				}
+      pAcc2->toPixel(prevRow, col);
+      upVal = pAcc2->getColumnAsDouble();
+	  if(upVal>0)
+	  {
+			  count+=1;
+	  }
 
-				pAcc2->nextRow();
-			}
 
-			mean = total / count;
-			std = sqrt(total_sum / count - mean * mean);
-			pAcc2->toPixel(row,col);
-			pDestAcc->toPixel(row,col);
-			zstatistic = (pAcc2->getColumnAsDouble()-mean)/std;
-				std::string s;
-				std::stringstream out;
-				out << zstatistic;
-				s = out.str();
-	
-			//pProgress->updateProgress(s,threshold, ERRORS);
-			if(zstatistic>threshold)
-			{
-				switchOnEncoding(pDesc->getDataType(), conversion, pDestAcc->getColumn(), 1000.0);
-			}
+      pAcc2->toPixel(prevRow, nextCol);
+      upperRightVal = pAcc2->getColumnAsDouble();
+	  	  if(upperRightVal>0)
+		  {
+			  count+=1;
+		  }
 
-			else
-			{
-				switchOnEncoding(pDesc->getDataType(), conversion, pDestAcc->getColumn(), 0.0);
-			}
+      pAcc2->toPixel(row, prevCol);
+      leftVal = pAcc2->getColumnAsDouble();
+	  	  if(leftVal>0)
+		  {
+			  count+=1;
+		  }
 
-			total = 0.0;
-            total_sum = 0.0;
-            mean = 0.0;
-            std = 0.0;
-			count=0;
+      pAcc2->toPixel(row, nextCol);
+      rightVal = pAcc2->getColumnAsDouble();
+	  	  if(rightVal>0)
+		  {
+			  count+=1;
+		  }
+
+      pAcc2->toPixel(nextRow, prevCol);
+      lowerLeftVal = pAcc2->getColumnAsDouble();
+	  	  if(lowerLeftVal>0)
+		  {
+			  count+=1;
+		  }
+
+      pAcc2->toPixel(nextRow, col);
+      downVal = pAcc2->getColumnAsDouble();
+	  	  if(downVal>0)
+		  {
+			  count+=1;
+		  }
+
+      pAcc2->toPixel(nextRow, nextCol);
+      lowerRightVal = pAcc2->getColumnAsDouble();
+	  	  if(lowerRightVal>0)
+		  {
+			  count+=1;
+		  }
+
+
+
+		  std::string s;
+		std::stringstream out;
+		out << count;
+		s = out.str();
+		//pProgress->updateProgress(s, 0, ERRORS);
+
+
+
+	  
+
+      if(count>threshold)
+	  {
+		  switchOnEncoding(pDesc->getDataType(), conversion, pDestAcc2->getColumn(), 1000.0);
+	  }
+
+	  else
+	  {
+		  switchOnEncoding(pDesc->getDataType(), conversion, pDestAcc2->getColumn(), 0.0);
+	  }
+
+	  count=0;
 
 			pAcc->nextColumn();
 	  }
