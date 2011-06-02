@@ -34,6 +34,8 @@
 #include <QtCore/QStringList>
 #include <QtGui/QInputDialog>
 #include <sstream>
+#include "BitMaskIterator.h"
+
 
 
 
@@ -42,10 +44,10 @@
 REGISTER_PLUGIN_BASIC(OpticksTutorial, ORIENTATION);
 
 
-   void updateStatistics(int row, int col, int totalx, int totaly)
+   void updateStatistics3(unsigned int row, unsigned int col, unsigned int total_x, unsigned int total_y)
    {
-      totalx += col;
-      totaly += row;
+      total_x += col;
+      total_y += row;
    }
 
    void updateNumerator(int col, int row, int meanx, int numerator)
@@ -94,10 +96,7 @@ bool ORIENTATION::getInputSpecification(PlugInArgList*& pInArgList)
 bool ORIENTATION::getOutputSpecification(PlugInArgList*& pOutArgList)
 {
    VERIFY(pOutArgList = Service<PlugInManagerServices>()->getPlugInArgList());
-   pOutArgList->addArg<double>("Minimum", "The minimum value");
-   pOutArgList->addArg<double>("Maximum", "The maximum value");
-   pOutArgList->addArg<unsigned int>("Count", "The number of pixels");
-   pOutArgList->addArg<double>("Mean", "The average value");
+   pOutArgList->addArg<double>("m", "gradient");
    return true;
 }
 
@@ -169,25 +168,14 @@ bool ORIENTATION::execute(PlugInArgList* pInArgList, PlugInArgList* pOutArgList)
       }
    } // end if
 
-   unsigned int startRow = 0;
-   unsigned int startColumn = 0;
-   unsigned int endRow = pDesc->getRowCount() - 1;
-   unsigned int endColumn = pDesc->getColumnCount() - 1;
-   const BitMask* pPoints = (pAoi == NULL) ? NULL : pAoi->getSelectedPoints();
-   if (pPoints != NULL && !pPoints->isOutsideSelected())
-   {
-      int x1;
-      int x2;
-      int y1;
-      int y2;
-      pPoints->getMinimalBoundingBox(x1, y1, x2, y2);
 
-      startRow = y1;
-      endRow = y2;
-      startColumn = x1;
-      endColumn = x2;
-   }
-   
+   const BitMask* pPoints = (pAoi == NULL) ? NULL : pAoi->getSelectedPoints();
+   BitMaskIterator it(pPoints, pCube);
+   unsigned int startRow = it.getBoundingBoxStartRow();
+   unsigned int startColumn = it.getBoundingBoxStartColumn();
+   unsigned int endRow = it.getBoundingBoxEndRow();
+   unsigned int endColumn = it.getBoundingBoxEndColumn();
+
    FactoryResource<DataRequest> pRequest;
    pRequest->setRows(pDesc->getActiveRow(startRow), pDesc->getActiveRow(endRow));
    pRequest->setColumns(pDesc->getActiveColumn(startColumn), pDesc->getActiveColumn(endColumn));
@@ -195,8 +183,8 @@ bool ORIENTATION::execute(PlugInArgList* pInArgList, PlugInArgList* pOutArgList)
    DataAccessor pAcc = pCube->getDataAccessor(pRequest.release());
    double total = 0.0;
    unsigned int count = 0;
-   int totalx=0;
-   int totaly=0;
+   unsigned int totalx=0;
+   unsigned int totaly=0;
    int numerator=0;
    int denominator=0;
    double meanx=0.0;
@@ -238,19 +226,46 @@ bool ORIENTATION::execute(PlugInArgList* pInArgList, PlugInArgList* pOutArgList)
       for (unsigned int col = startColumn; col <= endColumn; ++col)
       {
 		  
-         if (pPoints == NULL || pPoints->getPixel(col, row))
-         {
+		  
+         //if (pPoints == NULL || pPoints->getPixel(col, row))
+         //{
 
-			 pAcc->toPixel(row,col);
-			 if(pAcc->getColumnAsDouble()!=0.0)
+			 //pAcc->toPixel(row,col);
+			 //std::string s;
+			//std::stringstream out;
+			//out << pAcc->getColumnAsDouble();
+			//s = out.str();
+			 //pProgress->updateProgress(s, 0, ERRORS);
+
+
+		  //pProgress->updateProgress(s, 0, ERRORS);
+
+		  if(it.getPixel(col,row))
+		  {
+			  int a=pAcc->getColumnAsDouble();
+			  	//			 std::string s;
+				 //std::stringstream out;
+				 //out << a;
+				 //s = out.str();
+				 //pProgress->updateProgress(s, 0, ERRORS);
+			  if(a!=0)
 			 {
-
-				 updateStatistics(row, col, totalx, totaly);
+				 totalx+=col;
+				 totaly+=row;
+				 //updateStatistics2(row, col, totalx, totaly);
 				 ++count;
+				 //std::string f;
+				 //std::stringstream out;
+				 //out << totalx;
+				 //f = out.str();
+				 //pProgress->updateProgress(f, 0, ERRORS);
 			 }
-		 }
+		  }
+
+		  pAcc->nextColumn();
+		 
 	  }
-	  
+	  pAcc->nextRow();
    }
 
       meanx = totalx / count;
@@ -258,11 +273,7 @@ bool ORIENTATION::execute(PlugInArgList* pInArgList, PlugInArgList* pOutArgList)
 
    for (unsigned int row = startRow; row <= endRow; ++row)
    {
- 
-      for (unsigned int col = startColumn; col <= endColumn; ++col)
-      {
 
-		  
 	        for (unsigned int col = startColumn; col <= endColumn; ++col)
       {
 		  
@@ -276,9 +287,9 @@ bool ORIENTATION::execute(PlugInArgList* pInArgList, PlugInArgList* pOutArgList)
 			 }
 		 }
 			}
-	  }
-	  
    }
+	  
+   
 
    	  m = numerator/denominator;
 
