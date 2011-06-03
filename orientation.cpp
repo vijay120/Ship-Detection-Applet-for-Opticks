@@ -44,11 +44,6 @@
 REGISTER_PLUGIN_BASIC(OpticksTutorial, ORIENTATION);
 
 
-   void updateStatistics3(unsigned int row, unsigned int col, unsigned int total_x, unsigned int total_y)
-   {
-      total_x += col;
-      total_y += row;
-   }
 
    void updateNumerator(int col, int row, int meanx, int numerator)
    {
@@ -171,10 +166,10 @@ bool ORIENTATION::execute(PlugInArgList* pInArgList, PlugInArgList* pOutArgList)
 
    const BitMask* pPoints = (pAoi == NULL) ? NULL : pAoi->getSelectedPoints();
    BitMaskIterator it(pPoints, pCube);
-   unsigned int startRow = it.getBoundingBoxStartRow();
-   unsigned int startColumn = it.getBoundingBoxStartColumn();
-   unsigned int endRow = it.getBoundingBoxEndRow();
-   unsigned int endColumn = it.getBoundingBoxEndColumn();
+    int startRow = it.getBoundingBoxStartRow();
+    int startColumn = it.getBoundingBoxStartColumn();
+    int endRow = it.getBoundingBoxEndRow();
+    int endColumn = it.getBoundingBoxEndColumn();
 
    FactoryResource<DataRequest> pRequest;
    pRequest->setRows(pDesc->getActiveRow(startRow), pDesc->getActiveRow(endRow));
@@ -182,18 +177,18 @@ bool ORIENTATION::execute(PlugInArgList* pInArgList, PlugInArgList* pOutArgList)
    pRequest->setInterleaveFormat(BSQ);
    DataAccessor pAcc = pCube->getDataAccessor(pRequest.release());
    double total = 0.0;
-   unsigned int count = 0;
-   unsigned int totalx=0;
-   unsigned int totaly=0;
+    int count = 0;
+    int totalx=0;
+    int totaly=0;
    int numerator=0;
    int denominator=0;
-   double meanx=0.0;
-   double meany=0.0;
    double m=0.0;
+    int totalxy=0;
+    int totalx_sq=0;
       
 
    
-   for (unsigned int row = startRow; row <= endRow; ++row)
+      for ( int row = startRow; row <= endRow; ++row)
    {
       if (isAborted())
       {
@@ -220,79 +215,30 @@ bool ORIENTATION::execute(PlugInArgList* pInArgList, PlugInArgList* pOutArgList)
 
       if (pProgress != NULL)
       {
-         pProgress->updateProgress("Calculating statistics", row * 100 / pDesc->getRowCount(), NORMAL);
+         pProgress->updateProgress("Calculating statistics", 0.5*row * 100 / pDesc->getRowCount(), NORMAL);
       }
 
-      for (unsigned int col = startColumn; col <= endColumn; ++col)
+      for ( int col = startColumn; col <= endColumn; ++col)
       {
-		  
-		  
-         //if (pPoints == NULL || pPoints->getPixel(col, row))
-         //{
-
-			 //pAcc->toPixel(row,col);
-			 //std::string s;
-			//std::stringstream out;
-			//out << pAcc->getColumnAsDouble();
-			//s = out.str();
-			 //pProgress->updateProgress(s, 0, ERRORS);
-
-
-		  //pProgress->updateProgress(s, 0, ERRORS);
-
-		  if(it.getPixel(col,row))
-		  {
-			  int a=pAcc->getColumnAsDouble();
-			  	//			 std::string s;
-				 //std::stringstream out;
-				 //out << a;
-				 //s = out.str();
-				 //pProgress->updateProgress(s, 0, ERRORS);
-			  if(a!=0)
-			 {
-				 totalx+=col;
-				 totaly+=row;
-				 //updateStatistics2(row, col, totalx, totaly);
-				 ++count;
-				 //std::string f;
-				 //std::stringstream out;
-				 //out << totalx;
-				 //f = out.str();
-				 //pProgress->updateProgress(f, 0, ERRORS);
-			 }
-		  }
-
-		  pAcc->nextColumn();
-		 
-	  }
-	  pAcc->nextRow();
-   }
-
-      meanx = totalx / count;
-	  meany = totaly/count;
-
-   for (unsigned int row = startRow; row <= endRow; ++row)
-   {
-
-	        for (unsigned int col = startColumn; col <= endColumn; ++col)
-      {
-		  
          if (pPoints == NULL || pPoints->getPixel(col, row))
          {
-			 pAcc->toPixel(row,col);
-			 if(pAcc->getColumnAsDouble()==1000.0)
+			 if(pAcc->getColumnAsInteger()!=0)
 			 {
-				 updateNumerator(col, row, meanx, numerator);
-				 updateDenominator(row,meany,denominator);
+					totalxy+=(-1)*col*row;
+					totalx+=col;
+					totaly-=row;
+					++count;
+					totalx_sq+=col*col;
+
 			 }
+			 
 		 }
-			}
+		 pAcc->nextColumn();
+	  }
+      pAcc->nextRow();
    }
-	  
-   
 
-   	  m = numerator/denominator;
-
+	  m = (totalxy-((totalx*totaly)/count))/((totalx_sq/1.0)-((totalx*totalx)/count));
 
 
    if (pProgress != NULL)
@@ -303,7 +249,7 @@ bool ORIENTATION::execute(PlugInArgList* pInArgList, PlugInArgList* pOutArgList)
    
    pStep->addProperty("Orientation", m);
    
-   pOutArgList->setPlugInArgValue("Orientation", &m);
+   pOutArgList->setPlugInArgValue("gradient", &m);
 
    pStep->finalize();
    return true;
