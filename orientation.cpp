@@ -35,6 +35,7 @@
 #include <QtGui/QInputDialog>
 #include <sstream>
 #include "BitMaskIterator.h"
+#include <math.h>
 
 
 
@@ -182,7 +183,6 @@ bool ORIENTATION::execute(PlugInArgList* pInArgList, PlugInArgList* pOutArgList)
     int totaly=0;
    int numerator=0;
    int denominator=0;
-   double m=0.0;
     int totalxy=0;
     int totalx_sq=0;
       
@@ -238,12 +238,12 @@ bool ORIENTATION::execute(PlugInArgList* pInArgList, PlugInArgList* pOutArgList)
       pAcc->nextRow();
    }
 
-	  m = (totalxy-((totalx*totaly)/count))/((totalx_sq/1.0)-((totalx*totalx)/count));
+	  double m = atan(((totalxy-((totalx*totaly)/count))/((totalx_sq/1.0)-((totalx*totalx)/count))))*180/3.14159265;
 
 
    if (pProgress != NULL)
    {
-      std::string msg = "Orientation: " + StringUtilities::toDisplayString(m) + "\n";
+      std::string msg = "Orientation: " + StringUtilities::toDisplayString(m) + " degrees from horizontal"+ "\n";
       pProgress->updateProgress(msg, 100, NORMAL);
    }
    
