@@ -27,7 +27,7 @@
 #include "RasterElement.h"
 #include "StringUtilities.h"
 #include "switchOnEncoding.h"
-#include "ORIENTATION.h"
+#include "ELLIPTICAL.h"
 #include "TypeConverter.h"
 #include <limits>
 #include <vector>
@@ -40,28 +40,13 @@
 
 
 
+REGISTER_PLUGIN_BASIC(OpticksTutorial, ELLIPTICAL);
 
 
-REGISTER_PLUGIN_BASIC(OpticksTutorial, ORIENTATION);
-
-
-
-   void updateNumerator(int col, int row, int meanx, int numerator)
-   {
-	   numerator+=(col-meanx)*row;
-   }
-
-   void updateDenominator(int row, int meany, int denominator)
-   {
-	   denominator+=(row-meany)*(row-meany);
-   }
-
-
-
-ORIENTATION::ORIENTATION()
+ELLIPTICAL::ELLIPTICAL()
 {
-   setDescriptorId("{BEB0B654-710E-41D1-B3FC-A4459C6EBCA1}");
-   setName("Orientation");
+   setDescriptorId("{1046535B-7646-443A-9971-3D1C3C713D99}");
+   setName("Elliptical");
    setDescription("Using AOIs.");
    setCreator("Opticks Community");
    setVersion("Sample");
@@ -69,15 +54,15 @@ ORIENTATION::ORIENTATION()
    setProductionStatus(false);
    setType("Sample");
    setSubtype("Statistics");
-   setMenuLocation("[Tutorial]/Orientation");
+   setMenuLocation("[Tutorial]/Elliptical");
    setAbortSupported(true);
 }
 
-ORIENTATION::~ORIENTATION()
+ELLIPTICAL::~ELLIPTICAL()
 {
 }
 
-bool ORIENTATION::getInputSpecification(PlugInArgList*& pInArgList)
+bool ELLIPTICAL::getInputSpecification(PlugInArgList*& pInArgList)
 {
    VERIFY(pInArgList = Service<PlugInManagerServices>()->getPlugInArgList());
    pInArgList->addArg<Progress>(Executable::ProgressArg(), NULL, "Progress reporter");
@@ -89,16 +74,19 @@ bool ORIENTATION::getInputSpecification(PlugInArgList*& pInArgList)
    return true;
 }
 
-bool ORIENTATION::getOutputSpecification(PlugInArgList*& pOutArgList)
+bool ELLIPTICAL::getOutputSpecification(PlugInArgList*& pOutArgList)
 {
    VERIFY(pOutArgList = Service<PlugInManagerServices>()->getPlugInArgList());
-   pOutArgList->addArg<double>("m", "gradient");
+   pOutArgList->addArg<double>("orientation", "orientation");
+   pOutArgList->addArg<double>("semi major axis", "semi major axis");
+   pOutArgList->addArg<double>("semi minor axis", "semi minor axis");
+   pOutArgList->addArg<double>("effective area", "effective area");
    return true;
 }
 
-bool ORIENTATION::execute(PlugInArgList* pInArgList, PlugInArgList* pOutArgList)
+bool ELLIPTICAL::execute(PlugInArgList* pInArgList, PlugInArgList* pOutArgList)
 {
-   StepResource pStep("Orientation", "app", "6988470F-DEAA-4AD4-A1F5-6E0E138BE5CE");
+   StepResource pStep("Elliptical", "app", "E4B5D29C-9964-4615-8258-5BB9915768F7");
    if (pInArgList == NULL || pOutArgList == NULL)
    {
       return false;
@@ -177,14 +165,23 @@ bool ORIENTATION::execute(PlugInArgList* pInArgList, PlugInArgList* pOutArgList)
    pRequest->setColumns(pDesc->getActiveColumn(startColumn), pDesc->getActiveColumn(endColumn));
    pRequest->setInterleaveFormat(BSQ);
    DataAccessor pAcc = pCube->getDataAccessor(pRequest.release());
+
+   FactoryResource<DataRequest> pRequest2;
+   pRequest2->setRows(pDesc->getActiveRow(startRow), pDesc->getActiveRow(endRow));
+   pRequest2->setColumns(pDesc->getActiveColumn(startColumn), pDesc->getActiveColumn(endColumn));
+   pRequest2->setInterleaveFormat(BSQ);
+   DataAccessor pAcc2 = pCube->getDataAccessor(pRequest2.release());
    double total = 0.0;
     int count = 0;
     int totalx=0;
     int totaly=0;
    int numerator=0;
    int denominator=0;
-    int totalxy=0;
+   double m=0.0;
+    double totalxy=0;
     int totalx_sq=0;
+	double totalxx=0;
+	double totalyy=0;
       
 
    
@@ -224,32 +221,198 @@ bool ORIENTATION::execute(PlugInArgList* pInArgList, PlugInArgList* pOutArgList)
          {
 			 if(pAcc->getColumnAsInteger()!=0)
 			 {
-					totalxy+=(-1)*col*row;
 					totalx+=col;
 					totaly-=row;
 					++count;
-					totalx_sq+=col*col;
-
 			 }
 			 
 		 }
 		 pAcc->nextColumn();
 	  }
       pAcc->nextRow();
-   }
+	  }
 
-	  double m = atan(((totalxy-((totalx*totaly)/count))/((totalx_sq/1.0)-((totalx*totalx)/count))))*180/3.14159265;
+	  double xcm=totalx/count;
+	  double ycm=totaly/count;
+	  /*
+					std::string p;
+					std::stringstream out4;
+					out4 << xcm;
+					p = out4.str();
+					pProgress->updateProgress("xcm "+p,0, ERRORS);
+
+					std::string p2;
+					std::stringstream out5;
+					out5 << ycm;
+					p2 = out5.str();
+					pProgress->updateProgress("ycm "+p2,0, ERRORS);
+					*/
+
+
+
+	  //pAcc->toPixel(startRow, startColumn);
+
+	 for ( int row = startRow; row <= endRow; ++row)
+   {
+      if (isAborted())
+      {
+         std::string msg = getName() + " has been aborted.";
+         pStep->finalize(Message::Abort, msg);
+         if (pProgress != NULL)
+         {
+            pProgress->updateProgress(msg, 0, ABORT);
+         }
+
+         return false;
+      }
+      if (!pAcc2.isValid())
+      {
+         std::string msg = "Unable to access the cube data.";
+         pStep->finalize(Message::Failure, msg);
+         if (pProgress != NULL)
+         {
+            pProgress->updateProgress(msg, 0, ERRORS);
+         }
+
+         return false;
+      }
+
+      if (pProgress != NULL)
+      {
+         pProgress->updateProgress("Calculating statistics", 0.5*row * 100 / pDesc->getRowCount(), NORMAL);
+      }
+
+      for ( int col = startColumn; col <= endColumn; ++col)
+      {
+         if (pPoints == NULL || pPoints->getPixel(col, row))
+         {
+			 if(pAcc2->getColumnAsInteger()!=0)
+			 {
+					
+					totalxx+=(col-xcm)*(col-xcm)/count;
+					totalyy+=(-row-ycm)*(-row-ycm)/count;
+					totalxy-=(col-xcm)*(-row-ycm)/count;
+
+					/*
+					std::string s;
+					std::stringstream out;
+					out << totalxx;
+					s = out.str();
+					pProgress->updateProgress("totalxx"+s,0, ERRORS);
+
+					std::string q;
+					std::stringstream out1;
+					out1 << totalyy;
+					q = out1.str();
+					pProgress->updateProgress("totalyy"+q,0, ERRORS);
+
+					std::string f;
+					std::stringstream out2;
+					out2 << totalxy;
+					f = out2.str();
+					pProgress->updateProgress("totalxy"+f,0, ERRORS);
+					*/
+			 }
+			 
+		 }
+		 pAcc2->nextColumn();
+	  }
+      pAcc2->nextRow();
+	 }
+
+	 double t=totalxx+totalyy;
+	 double d = (totalxx*totalyy)-(totalxy*totalxy);
+	 double l1 = (t/2)+sqrt((t*t/4)-d);
+	 double l2 = (t/2)-sqrt((t*t/4)-d);
+	 /*
+	 	 			std::string e;
+					std::stringstream out12;
+					out12 << l1;
+					e = out12.str();
+					pProgress->updateProgress("l1 "+e,0, ERRORS);
+
+	 	 			std::string e1;
+					std::stringstream out13;
+					out13 << l2;
+					e1 = out13.str();
+					pProgress->updateProgress("l2 "+e1,0, ERRORS);*/
+
+
+
+	 double eigenvector_1x=0.0;
+	 double eigenvector_1y=0.0;
+
+	 double eigenvector_2x=0.0;
+	 double eigenvector_2y=0.0;
+
+	 if(totalxy==0.0)
+	 {
+		 eigenvector_1x=1.0;
+		 eigenvector_1y=0.0;
+
+		 eigenvector_2x=0.0;
+		 eigenvector_2y=1.0;
+	 }
+
+	 else
+	 {
+		 eigenvector_1x=l1-totalyy;
+		 eigenvector_1y=totalxy;
+
+		 eigenvector_2x=l2-totalyy;
+		 eigenvector_2y=totalxy;
+	 }
+	 
+	 /*
+	 double tester = eigenvector_2y/eigenvector_2x;
+	 				std::string f1;
+					std::stringstream out9;
+					out9 << tester;
+					f1 = out9.str();
+					pProgress->updateProgress("tester "+f1,0, ERRORS);
+
+	 				std::string v;
+					std::stringstream out10;
+					out10 << eigenvector_2y;
+					v = out10.str();
+					pProgress->updateProgress("eigenvector_2y "+v,0, ERRORS);
+
+
+	 				std::string l;
+					std::stringstream out11;
+					out11 << eigenvector_2x;
+					l = out11.str();
+					pProgress->updateProgress("eigenvector_2x "+l,0, ERRORS);
+					*/
+
+	 double orientation = -((atan(eigenvector_2y/eigenvector_2x)*180/3.14159265)-90.0);
+	 double semimajor = sqrt(l1)*2.0;
+	 double semiminor = sqrt(l2)*2.0;
+	 double area = 3.14159265*semimajor*semiminor;
+
+
 
 
    if (pProgress != NULL)
    {
-      std::string msg = "Orientation: " + StringUtilities::toDisplayString(m) + " degrees from horizontal"+ "\n";
+      std::string msg = "Orientation: " + StringUtilities::toDisplayString(orientation) + " degrees from horizontal"+ "\n"
+						+"Semi Major Axis: "+ StringUtilities::toDisplayString(semimajor)+ " pixels"+ "\n"
+						+"Semi Minor Axis: "+StringUtilities::toDisplayString(semiminor)+ " pixels" + "\n"
+						+"Effective area of ship: "+StringUtilities::toDisplayString(area)+" pixels^2";
       pProgress->updateProgress(msg, 100, NORMAL);
    }
    
-   pStep->addProperty("Orientation", m);
+   pStep->addProperty("Orientation", orientation);
+   pStep->addProperty("Semi Major Axis", semimajor);
+   pStep->addProperty("Semi Minor Axis", semiminor);
+   pStep->addProperty("Effective area of ship", area);
+
    
-   pOutArgList->setPlugInArgValue("gradient", &m);
+   pOutArgList->setPlugInArgValue("Orientation", &orientation);
+   pOutArgList->setPlugInArgValue("Semi Major Axis", &semimajor);
+   pOutArgList->setPlugInArgValue("Semi Minor Axis", &semiminor);
+   pOutArgList->setPlugInArgValue("Effective area of ship", &area);
+
 
    pStep->finalize();
    return true;
