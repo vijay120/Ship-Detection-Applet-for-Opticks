@@ -40,124 +40,124 @@ namespace
 
 	  int prevCol1 = std::max(col-2,0);
 	  int prevRow1= std::max(row-2,0);
-	  int nextCol1= std::min(col+2,colSize-2);
-	  int nextRow1= std::min(row+2,rowSize-2);
+	  int nextCol1= std::min(col+2,colSize-1);
+	  int nextRow1= std::min(row+2,rowSize-1);
 
 	  pSrcAcc->toPixel(prevRow1, prevCol1);
       VERIFYNRV(pSrcAcc.isValid());
-      T upperLeftVal1 = *reinterpret_cast<T*>(pSrcAcc->getColumn());
+      T upperLeftVal1 = *reinterpret_cast<T*>(pSrcAcc->getColumn())*2/159.0;
 
 	  pSrcAcc->toPixel(prevRow1, prevCol);
       VERIFYNRV(pSrcAcc.isValid());
-      T upperLeftVal2 = *reinterpret_cast<T*>(pSrcAcc->getColumn());
+      T upperLeftVal2 = *reinterpret_cast<T*>(pSrcAcc->getColumn())*4/159.0;
 
 	  pSrcAcc->toPixel(prevRow1, col);
       VERIFYNRV(pSrcAcc.isValid());
-      T upperLeftVal3 = *reinterpret_cast<T*>(pSrcAcc->getColumn());
+      T upperLeftVal3 = *reinterpret_cast<T*>(pSrcAcc->getColumn())*5/159.0;
 
 	  pSrcAcc->toPixel(prevRow1, nextCol);
       VERIFYNRV(pSrcAcc.isValid());
-      T upperLeftVal4 = *reinterpret_cast<T*>(pSrcAcc->getColumn());
+      T upperLeftVal4 = *reinterpret_cast<T*>(pSrcAcc->getColumn())*4/159.0;
 
 	  pSrcAcc->toPixel(prevRow1, nextCol1);
       VERIFYNRV(pSrcAcc.isValid());
-      T upperLeftVal5 = *reinterpret_cast<T*>(pSrcAcc->getColumn());
+      T upperLeftVal5 = *reinterpret_cast<T*>(pSrcAcc->getColumn())*2/159.0;
 
 	  pSrcAcc->toPixel(prevRow, nextCol1);
       VERIFYNRV(pSrcAcc.isValid());
-      T upperLeftVal6 = *reinterpret_cast<T*>(pSrcAcc->getColumn());
+      T upperLeftVal6 = *reinterpret_cast<T*>(pSrcAcc->getColumn())*4/159.0;
 
 	  pSrcAcc->toPixel(prevRow, prevCol1);
       VERIFYNRV(pSrcAcc.isValid());
-      T upperLeftVal7 = *reinterpret_cast<T*>(pSrcAcc->getColumn());
+      T upperLeftVal7 = *reinterpret_cast<T*>(pSrcAcc->getColumn())*4/159.0;
 
 	  pSrcAcc->toPixel(row, nextCol1);
       VERIFYNRV(pSrcAcc.isValid());
-      T upperLeftVal8 = *reinterpret_cast<T*>(pSrcAcc->getColumn());
+      T upperLeftVal8 = *reinterpret_cast<T*>(pSrcAcc->getColumn())*5/159.0;
 
 	  pSrcAcc->toPixel(row, prevCol1);
       VERIFYNRV(pSrcAcc.isValid());
-      T upperLeftVal9 = *reinterpret_cast<T*>(pSrcAcc->getColumn());
+      T upperLeftVal9 = *reinterpret_cast<T*>(pSrcAcc->getColumn())*5/159.0;
 
 	  pSrcAcc->toPixel(nextRow, prevCol1);
       VERIFYNRV(pSrcAcc.isValid());
-      T upperLeftVal10 = *reinterpret_cast<T*>(pSrcAcc->getColumn());
+      T upperLeftVal10 = *reinterpret_cast<T*>(pSrcAcc->getColumn())*4/159.0;
 
 	  pSrcAcc->toPixel(nextRow, nextCol1);
       VERIFYNRV(pSrcAcc.isValid());
-      T upperLeftVal11 = *reinterpret_cast<T*>(pSrcAcc->getColumn());
+      T upperLeftVal11 = *reinterpret_cast<T*>(pSrcAcc->getColumn())*4/159.0;
 
 	  pSrcAcc->toPixel(nextRow1, nextCol1);
       VERIFYNRV(pSrcAcc.isValid());
-      T upperLeftVal12 = *reinterpret_cast<T*>(pSrcAcc->getColumn());
+      T upperLeftVal12 = *reinterpret_cast<T*>(pSrcAcc->getColumn())*2/159.0;
 
 	  pSrcAcc->toPixel(nextRow1, nextCol);
       VERIFYNRV(pSrcAcc.isValid());
-      T upperLeftVal13 = *reinterpret_cast<T*>(pSrcAcc->getColumn());
+      T upperLeftVal13 = *reinterpret_cast<T*>(pSrcAcc->getColumn())*4/159.0;
 
 	  pSrcAcc->toPixel(nextRow1, col);
       VERIFYNRV(pSrcAcc.isValid());
-      T upperLeftVal14 = *reinterpret_cast<T*>(pSrcAcc->getColumn());
+      T upperLeftVal14 = *reinterpret_cast<T*>(pSrcAcc->getColumn())*5/159.0;
 
 	  pSrcAcc->toPixel(nextRow1, prevCol);
       VERIFYNRV(pSrcAcc.isValid());
-      T upperLeftVal15 = *reinterpret_cast<T*>(pSrcAcc->getColumn());
+      T upperLeftVal15 = *reinterpret_cast<T*>(pSrcAcc->getColumn())*4/159.0;
 
 	  pSrcAcc->toPixel(nextRow1, prevCol1);
       VERIFYNRV(pSrcAcc.isValid());
-      T upperLeftVal16 = *reinterpret_cast<T*>(pSrcAcc->getColumn());
+      T upperLeftVal16 = *reinterpret_cast<T*>(pSrcAcc->getColumn())*2/159.0;
 
 	  pSrcAcc->toPixel(row, col);
       VERIFYNRV(pSrcAcc.isValid());
-      T upperLeftVal17 = *reinterpret_cast<T*>(pSrcAcc->getColumn());
+      T upperLeftVal17 = *reinterpret_cast<T*>(pSrcAcc->getColumn())*15/159.0;
 
       
       pSrcAcc->toPixel(prevRow, prevCol);
       VERIFYNRV(pSrcAcc.isValid());
-      T upperLeftVal = *reinterpret_cast<T*>(pSrcAcc->getColumn());
+      T upperLeftVal = *reinterpret_cast<T*>(pSrcAcc->getColumn())*9/159.0;
 
       pSrcAcc->toPixel(prevRow, col);
       VERIFYNRV(pSrcAcc.isValid());
-      T upVal = *reinterpret_cast<T*>(pSrcAcc->getColumn());
+      T upVal = *reinterpret_cast<T*>(pSrcAcc->getColumn())*12/159.0;
 
       pSrcAcc->toPixel(prevRow, nextCol);
       VERIFYNRV(pSrcAcc.isValid());
-      T upperRightVal = *reinterpret_cast<T*>(pSrcAcc->getColumn());
+      T upperRightVal = *reinterpret_cast<T*>(pSrcAcc->getColumn())*9/159.0;
 
       pSrcAcc->toPixel(row, prevCol);
       VERIFYNRV(pSrcAcc.isValid());
-      T leftVal = *reinterpret_cast<T*>(pSrcAcc->getColumn());
+      T leftVal = *reinterpret_cast<T*>(pSrcAcc->getColumn())*12/159.0;
 
       pSrcAcc->toPixel(row, nextCol);
       VERIFYNRV(pSrcAcc.isValid());
-      T rightVal = *reinterpret_cast<T*>(pSrcAcc->getColumn());
+      T rightVal = *reinterpret_cast<T*>(pSrcAcc->getColumn())*12/159.0;
 
       pSrcAcc->toPixel(nextRow, prevCol);
       VERIFYNRV(pSrcAcc.isValid());
-      T lowerLeftVal = *reinterpret_cast<T*>(pSrcAcc->getColumn());
+      T lowerLeftVal = *reinterpret_cast<T*>(pSrcAcc->getColumn())*9/159.0;
 
       pSrcAcc->toPixel(nextRow, col);
       VERIFYNRV(pSrcAcc.isValid());
-      T downVal = *reinterpret_cast<T*>(pSrcAcc->getColumn());
+      T downVal = *reinterpret_cast<T*>(pSrcAcc->getColumn())*12/159.0;
 
       pSrcAcc->toPixel(nextRow, nextCol);
       VERIFYNRV(pSrcAcc.isValid());
-      T lowerRightVal = *reinterpret_cast<T*>(pSrcAcc->getColumn());
+      T lowerRightVal = *reinterpret_cast<T*>(pSrcAcc->getColumn())*9/159.0;
 
- 
-
-
-
-      double gx = 9 * upperLeftVal + 12 * leftVal + 9 * lowerLeftVal + 9 * upperRightVal + 12 *
+ /*
+      unsigned int gx = 9 * upperLeftVal + 12 * leftVal + 9 * lowerLeftVal + 9 * upperRightVal + 12 *
          rightVal + 9 * lowerRightVal + 12* downVal + 12*upVal;
 
-	  double gy = 2*upperLeftVal1 + 4*upperLeftVal2 + 5*upperLeftVal3 + 4*upperLeftVal4 + 2* upperLeftVal5 + 4*upperLeftVal6 + 4*upperLeftVal7 + 5*upperLeftVal8 + 5*upperLeftVal9 + 4*upperLeftVal10 + 4*upperLeftVal11
+	  unsigned int gy = 2*upperLeftVal1 + 4*upperLeftVal2 + 5*upperLeftVal3 + 4*upperLeftVal4 + 2* upperLeftVal5 + 4*upperLeftVal6 + 4*upperLeftVal7 + 5*upperLeftVal8 + 5*upperLeftVal9 + 4*upperLeftVal10 + 4*upperLeftVal11
 		  + 2*upperLeftVal12 + 4*upperLeftVal13 + 5*upperLeftVal14 + 4*upperLeftVal15 + 2*upperLeftVal16 + 15*upperLeftVal17;
+		  */
 
-	  double divisor=(gx+gy)/159.0;
+	  double g = upperLeftVal + leftVal + lowerLeftVal + upperRightVal + rightVal + lowerRightVal + downVal + upVal + upperLeftVal1 + upperLeftVal2 + upperLeftVal3 + upperLeftVal4 + upperLeftVal5 + upperLeftVal6 + upperLeftVal7 + upperLeftVal8 + upperLeftVal9 + upperLeftVal10 + upperLeftVal11 + upperLeftVal12 + upperLeftVal13 + upperLeftVal14 + upperLeftVal15 + upperLeftVal16 + upperLeftVal17;
+
+	   //double divisor=(gx+gy)/159.0;
 
 
-      *pData = static_cast<T>(divisor);
+      *pData = static_cast<T>(g);
    }
 };
 
