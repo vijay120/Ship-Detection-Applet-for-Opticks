@@ -25,13 +25,23 @@
 #include "switchOnEncoding.h"
 #include "DENOISE.h"
 #include <limits>
+#include <string>
+using namespace std;
 
 REGISTER_PLUGIN_BASIC(OpticksTutorial, DENOISE);
 
 namespace
 {
    template<typename T>
-   void edgeDetection(T* pData, DataAccessor pSrcAcc, int row, int col, int rowSize, int colSize)
+   void conversion(T* pData, double number)
+   {
+	   *pData=number;
+   }
+};
+
+
+
+   double edgeDetection6(DataAccessor pSrcAcc, int row, int col, int rowSize, int colSize)
    {
       int prevCol = std::max(col - 1, 0);
       int prevRow = std::max(row - 1, 0);
@@ -44,122 +54,92 @@ namespace
 	  int nextRow1= std::min(row+2,rowSize-1);
 
 	  pSrcAcc->toPixel(prevRow1, prevCol1);
-      VERIFYNRV(pSrcAcc.isValid());
-      T upperLeftVal1 = *reinterpret_cast<T*>(pSrcAcc->getColumn())*2/159.0;
+      int row1col1 = pSrcAcc->getColumnAsInteger();
 
 	  pSrcAcc->toPixel(prevRow1, prevCol);
-      VERIFYNRV(pSrcAcc.isValid());
-      T upperLeftVal2 = *reinterpret_cast<T*>(pSrcAcc->getColumn())*4/159.0;
+      int row1col2 = pSrcAcc->getColumnAsInteger();
 
 	  pSrcAcc->toPixel(prevRow1, col);
-      VERIFYNRV(pSrcAcc.isValid());
-      T upperLeftVal3 = *reinterpret_cast<T*>(pSrcAcc->getColumn())*5/159.0;
+      int row1col3 = pSrcAcc->getColumnAsInteger();
 
 	  pSrcAcc->toPixel(prevRow1, nextCol);
-      VERIFYNRV(pSrcAcc.isValid());
-      T upperLeftVal4 = *reinterpret_cast<T*>(pSrcAcc->getColumn())*4/159.0;
+      int row1col4 = pSrcAcc->getColumnAsInteger();
 
 	  pSrcAcc->toPixel(prevRow1, nextCol1);
-      VERIFYNRV(pSrcAcc.isValid());
-      T upperLeftVal5 = *reinterpret_cast<T*>(pSrcAcc->getColumn())*2/159.0;
-
-	  pSrcAcc->toPixel(prevRow, nextCol1);
-      VERIFYNRV(pSrcAcc.isValid());
-      T upperLeftVal6 = *reinterpret_cast<T*>(pSrcAcc->getColumn())*4/159.0;
+      int row1col5 = pSrcAcc->getColumnAsInteger();
 
 	  pSrcAcc->toPixel(prevRow, prevCol1);
-      VERIFYNRV(pSrcAcc.isValid());
-      T upperLeftVal7 = *reinterpret_cast<T*>(pSrcAcc->getColumn())*4/159.0;
+      int row2col1 = pSrcAcc->getColumnAsInteger();
 
-	  pSrcAcc->toPixel(row, nextCol1);
-      VERIFYNRV(pSrcAcc.isValid());
-      T upperLeftVal8 = *reinterpret_cast<T*>(pSrcAcc->getColumn())*5/159.0;
+	  pSrcAcc->toPixel(prevRow, prevCol);
+      int row2col2 = pSrcAcc->getColumnAsInteger();
+
+	  pSrcAcc->toPixel(prevRow, col);
+      int row2col3 = pSrcAcc->getColumnAsInteger();
+
+	  pSrcAcc->toPixel(prevRow, nextCol);
+      int row2col4 = pSrcAcc->getColumnAsInteger();
+
+	  pSrcAcc->toPixel(prevRow, nextCol1);
+      int row2col5 = pSrcAcc->getColumnAsInteger();
 
 	  pSrcAcc->toPixel(row, prevCol1);
-      VERIFYNRV(pSrcAcc.isValid());
-      T upperLeftVal9 = *reinterpret_cast<T*>(pSrcAcc->getColumn())*5/159.0;
+      int row3col1 = pSrcAcc->getColumnAsInteger();
 
-	  pSrcAcc->toPixel(nextRow, prevCol1);
-      VERIFYNRV(pSrcAcc.isValid());
-      T upperLeftVal10 = *reinterpret_cast<T*>(pSrcAcc->getColumn())*4/159.0;
-
-	  pSrcAcc->toPixel(nextRow, nextCol1);
-      VERIFYNRV(pSrcAcc.isValid());
-      T upperLeftVal11 = *reinterpret_cast<T*>(pSrcAcc->getColumn())*4/159.0;
-
-	  pSrcAcc->toPixel(nextRow1, nextCol1);
-      VERIFYNRV(pSrcAcc.isValid());
-      T upperLeftVal12 = *reinterpret_cast<T*>(pSrcAcc->getColumn())*2/159.0;
-
-	  pSrcAcc->toPixel(nextRow1, nextCol);
-      VERIFYNRV(pSrcAcc.isValid());
-      T upperLeftVal13 = *reinterpret_cast<T*>(pSrcAcc->getColumn())*4/159.0;
-
-	  pSrcAcc->toPixel(nextRow1, col);
-      VERIFYNRV(pSrcAcc.isValid());
-      T upperLeftVal14 = *reinterpret_cast<T*>(pSrcAcc->getColumn())*5/159.0;
-
-	  pSrcAcc->toPixel(nextRow1, prevCol);
-      VERIFYNRV(pSrcAcc.isValid());
-      T upperLeftVal15 = *reinterpret_cast<T*>(pSrcAcc->getColumn())*4/159.0;
-
-	  pSrcAcc->toPixel(nextRow1, prevCol1);
-      VERIFYNRV(pSrcAcc.isValid());
-      T upperLeftVal16 = *reinterpret_cast<T*>(pSrcAcc->getColumn())*2/159.0;
+	  pSrcAcc->toPixel(row, prevCol);
+      int row3col2 = pSrcAcc->getColumnAsInteger();
 
 	  pSrcAcc->toPixel(row, col);
-      VERIFYNRV(pSrcAcc.isValid());
-      T upperLeftVal17 = *reinterpret_cast<T*>(pSrcAcc->getColumn())*15/159.0;
+      int row3col3 = pSrcAcc->getColumnAsInteger();
 
-      
-      pSrcAcc->toPixel(prevRow, prevCol);
-      VERIFYNRV(pSrcAcc.isValid());
-      T upperLeftVal = *reinterpret_cast<T*>(pSrcAcc->getColumn())*9/159.0;
+	  pSrcAcc->toPixel(row, nextCol);
+      int row3col4 = pSrcAcc->getColumnAsInteger();
 
-      pSrcAcc->toPixel(prevRow, col);
-      VERIFYNRV(pSrcAcc.isValid());
-      T upVal = *reinterpret_cast<T*>(pSrcAcc->getColumn())*12/159.0;
+	  pSrcAcc->toPixel(row, nextCol1);
+      int row3col5 = pSrcAcc->getColumnAsInteger();
 
-      pSrcAcc->toPixel(prevRow, nextCol);
-      VERIFYNRV(pSrcAcc.isValid());
-      T upperRightVal = *reinterpret_cast<T*>(pSrcAcc->getColumn())*9/159.0;
+	  pSrcAcc->toPixel(nextRow, prevCol1);
+      int row4col1 = pSrcAcc->getColumnAsInteger();
 
-      pSrcAcc->toPixel(row, prevCol);
-      VERIFYNRV(pSrcAcc.isValid());
-      T leftVal = *reinterpret_cast<T*>(pSrcAcc->getColumn())*12/159.0;
-
-      pSrcAcc->toPixel(row, nextCol);
-      VERIFYNRV(pSrcAcc.isValid());
-      T rightVal = *reinterpret_cast<T*>(pSrcAcc->getColumn())*12/159.0;
-
-      pSrcAcc->toPixel(nextRow, prevCol);
-      VERIFYNRV(pSrcAcc.isValid());
-      T lowerLeftVal = *reinterpret_cast<T*>(pSrcAcc->getColumn())*9/159.0;
+	  pSrcAcc->toPixel(nextRow, prevCol);
+      int row4col2 = pSrcAcc->getColumnAsInteger();
 
       pSrcAcc->toPixel(nextRow, col);
-      VERIFYNRV(pSrcAcc.isValid());
-      T downVal = *reinterpret_cast<T*>(pSrcAcc->getColumn())*12/159.0;
+      int row4col3 = pSrcAcc->getColumnAsInteger();
 
       pSrcAcc->toPixel(nextRow, nextCol);
-      VERIFYNRV(pSrcAcc.isValid());
-      T lowerRightVal = *reinterpret_cast<T*>(pSrcAcc->getColumn())*9/159.0;
+      int row4col4 = pSrcAcc->getColumnAsInteger();
 
- /*
-      unsigned int gx = 9 * upperLeftVal + 12 * leftVal + 9 * lowerLeftVal + 9 * upperRightVal + 12 *
-         rightVal + 9 * lowerRightVal + 12* downVal + 12*upVal;
+      pSrcAcc->toPixel(nextRow, nextCol1);
+      int row4col5 = pSrcAcc->getColumnAsInteger();
 
-	  unsigned int gy = 2*upperLeftVal1 + 4*upperLeftVal2 + 5*upperLeftVal3 + 4*upperLeftVal4 + 2* upperLeftVal5 + 4*upperLeftVal6 + 4*upperLeftVal7 + 5*upperLeftVal8 + 5*upperLeftVal9 + 4*upperLeftVal10 + 4*upperLeftVal11
-		  + 2*upperLeftVal12 + 4*upperLeftVal13 + 5*upperLeftVal14 + 4*upperLeftVal15 + 2*upperLeftVal16 + 15*upperLeftVal17;
-		  */
+      pSrcAcc->toPixel(nextRow1, prevCol1);
+      int row5col1 = pSrcAcc->getColumnAsInteger();
 
-	  double g = upperLeftVal + leftVal + lowerLeftVal + upperRightVal + rightVal + lowerRightVal + downVal + upVal + upperLeftVal1 + upperLeftVal2 + upperLeftVal3 + upperLeftVal4 + upperLeftVal5 + upperLeftVal6 + upperLeftVal7 + upperLeftVal8 + upperLeftVal9 + upperLeftVal10 + upperLeftVal11 + upperLeftVal12 + upperLeftVal13 + upperLeftVal14 + upperLeftVal15 + upperLeftVal16 + upperLeftVal17;
+      pSrcAcc->toPixel(nextRow1, prevCol);
+      int row5col2 = pSrcAcc->getColumnAsInteger();
 
-	   //double divisor=(gx+gy)/159.0;
+      pSrcAcc->toPixel(nextRow1, col);
+      int row5col3 = pSrcAcc->getColumnAsInteger();
+
+      pSrcAcc->toPixel(nextRow1, nextCol);
+      int row5col4 = pSrcAcc->getColumnAsInteger();
+
+      pSrcAcc->toPixel(nextRow1, nextCol1);
+      int row5col5 = pSrcAcc->getColumnAsInteger();
+
+	   int g = 0*row1col1 + (-1)*row1col2 + (-1)*row1col3 + (-1)*row1col4 + 0*row1col5 + (-1)*row2col1 + 2*row2col2 + (-4)*row2col3 + 2*row2col4
+		         + (-1)*row2col5 + (-1)*row3col1 + (-4)*row3col2 + 13*row3col3 + (-4)*row3col4 + (-1)*row3col5 + (-1)*row4col1 + 2*row4col2 + (-4)*row4col3
+				 + 2*row4col4+ (-1)*row4col5 + 0*row5col1 + (-1)*row5col2 + (-1)*row5col3 + (-1)*row5col4 + 0*row5col5;
 
 
-      *pData = static_cast<T>(g);
-   }
-};
+	    double value = g;
+
+		return value;
+
+      
+   };
+
 
 DENOISE::DENOISE()
 {
@@ -249,6 +229,18 @@ bool DENOISE::execute(PlugInArgList* pInArgList, PlugInArgList* pOutArgList)
    FactoryResource<DataRequest> pResultRequest;
    pResultRequest->setWritable(true);
    DataAccessor pDestAcc = pResultCube->getDataAccessor(pResultRequest.release());
+   int rowSize= pDesc->getRowCount();
+   int colSize = pDesc->getColumnCount();
+   int zero=0;
+   int prevCol = 0;
+      int prevRow = 0;
+      int nextCol = 0;
+      int nextRow = 0;
+
+	  int prevCol1 = 0;
+	  int prevRow1= 0;
+	  int nextCol1= 0;
+	  int nextRow1= 0;
 
    for (unsigned int row = 0; row < pDesc->getRowCount(); ++row)
    {
@@ -278,9 +270,11 @@ bool DENOISE::execute(PlugInArgList* pInArgList, PlugInArgList* pOutArgList)
       }
       for (unsigned int col = 0; col < pDesc->getColumnCount(); ++col)
       {
-         switchOnEncoding(pDesc->getDataType(), edgeDetection, pDestAcc->getColumn(), pSrcAcc, row, col,
-            pDesc->getRowCount(), pDesc->getColumnCount());
-         pDestAcc->nextColumn();
+		  
+		  double value=edgeDetection6(pSrcAcc, row, col, pDesc->getRowCount(), pDesc->getColumnCount());
+          switchOnEncoding(pDesc->getDataType(), conversion, pDestAcc->getColumn(), value);
+          pDestAcc->nextColumn();
+		  
       }
 
       pDestAcc->nextRow();
