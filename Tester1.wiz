@@ -1,0 +1,183 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
+<Wizard xmlns="https://comet.balldayton.com/standards/namespaces/2005/v1/comet.xsd" batch="false" menuLocation="" name="Wizard" type="WizardObject" version="3">
+
+  <item batch="false" batchSupported="true" name="Get RasterElement" type="Wizard">
+    <location>84 235</location>
+    <input name="Progress" originalType="Progress" type="Progress" version="4">
+      <validType>Progress</validType>
+    </input>
+    <input name="Dialog Caption" originalType="string" type="string" version="4">
+      <validType>string</validType>
+    </input>
+    <output name="Session Item" originalType="RasterElement" type="RasterElement" version="4">
+      <validType>RasterElement</validType>
+      <validType>DataElement</validType>
+    </output>
+  </item>
+
+  <item batch="false" batchSupported="true" name="DENOISE" type="Sample">
+    <location>181 388</location>
+    <input name="Progress" originalType="Progress" type="Progress" version="4">
+      <validType>Progress</validType>
+    </input>
+    <input name="Data Element" originalType="RasterElement" type="RasterElement" version="4">
+      <validType>RasterElement</validType>
+      <validType>DataElement</validType>
+    </input>
+    <output name="Result" originalType="RasterElement" type="RasterElement" version="4">
+      <validType>RasterElement</validType>
+      <validType>DataElement</validType>
+    </output>
+  </item>
+
+  <item batch="false" batchSupported="true" name="HIGHPASS" type="Sample">
+    <location>337 374</location>
+    <input name="Progress" originalType="Progress" type="Progress" version="4">
+      <validType>Progress</validType>
+    </input>
+    <input name="Data Element" originalType="RasterElement" type="RasterElement" version="4">
+      <validType>RasterElement</validType>
+      <validType>DataElement</validType>
+    </input>
+    <output name="Result" originalType="RasterElement" type="RasterElement" version="4">
+      <validType>RasterElement</validType>
+      <validType>DataElement</validType>
+    </output>
+  </item>
+
+  <item batch="false" batchSupported="true" name="kdistribution" type="Sample">
+    <location>71 488</location>
+    <input name="Progress" originalType="Progress" type="Progress" version="4">
+      <validType>Progress</validType>
+    </input>
+    <input name="Data Element" originalType="RasterElement" type="RasterElement" version="4">
+      <validType>RasterElement</validType>
+      <validType>DataElement</validType>
+    </input>
+    <output name="Result" originalType="RasterElement" type="RasterElement" version="4">
+      <validType>RasterElement</validType>
+      <validType>DataElement</validType>
+    </output>
+  </item>
+
+  <item batch="false" batchSupported="true" name="CFAR" type="Sample">
+    <location>237 235</location>
+    <input name="Progress" originalType="Progress" type="Progress" version="4">
+      <validType>Progress</validType>
+    </input>
+    <input name="Data Element" originalType="RasterElement" type="RasterElement" version="4">
+      <validType>RasterElement</validType>
+      <validType>DataElement</validType>
+    </input>
+    <output name="Image1" originalType="RasterElement" type="RasterElement" version="4">
+      <validType>RasterElement</validType>
+      <validType>DataElement</validType>
+    </output>
+  </item>
+
+  <item batch="false" batchSupported="true" name="HOUGH" type="Sample">
+    <location>376 229</location>
+    <input name="Progress" originalType="Progress" type="Progress" version="4">
+      <validType>Progress</validType>
+    </input>
+    <input name="Image1" originalType="RasterElement" type="RasterElement" version="4">
+      <validType>RasterElement</validType>
+      <validType>DataElement</validType>
+    </input>
+    <input name="Image2" originalType="RasterElement" type="RasterElement" version="4">
+      <validType>RasterElement</validType>
+      <validType>DataElement</validType>
+    </input>
+    <output name="Result" originalType="RasterElement" type="RasterElement" version="4">
+      <validType>RasterElement</validType>
+      <validType>DataElement</validType>
+    </output>
+  </item>
+
+  <item batch="false" batchSupported="true" name="GAUSS" type="Sample">
+    <location>498 240</location>
+    <input name="Progress" originalType="Progress" type="Progress" version="4">
+      <validType>Progress</validType>
+    </input>
+    <input name="Data Element" originalType="RasterElement" type="RasterElement" version="4">
+      <validType>RasterElement</validType>
+      <validType>DataElement</validType>
+    </input>
+    <output name="Result" originalType="RasterElement" type="RasterElement" version="4">
+      <validType>RasterElement</validType>
+      <validType>DataElement</validType>
+    </output>
+  </item>
+
+  <item batch="false" batchSupported="true" name="RADON" type="Sample">
+    <location>650 282</location>
+    <input name="Progress" originalType="Progress" type="Progress" version="4">
+      <validType>Progress</validType>
+    </input>
+    <input name="Data Element" originalType="RasterElement" type="RasterElement" version="4">
+      <validType>RasterElement</validType>
+      <validType>DataElement</validType>
+    </input>
+    <output name="RResult" originalType="RasterElement" type="RasterElement" version="4">
+      <validType>RasterElement</validType>
+      <validType>DataElement</validType>
+    </output>
+  </item>
+
+  <item batch="false" batchSupported="true" name="MORPH" type="Sample">
+    <location>328 490</location>
+    <input name="Progress" originalType="Progress" type="Progress" version="4">
+      <validType>Progress</validType>
+    </input>
+    <input name="Result" originalType="RasterElement" type="RasterElement" version="4">
+      <validType>RasterElement</validType>
+      <validType>DataElement</validType>
+    </input>
+    <output name="Result1" originalType="RasterElement" type="RasterElement" version="4">
+      <validType>RasterElement</validType>
+      <validType>DataElement</validType>
+    </output>
+  </item>
+
+  <item batch="false" batchSupported="true" name="Ellipticalm" type="Sample">
+    <location>643 393</location>
+    <input name="Progress" originalType="Progress" type="Progress" version="4">
+      <validType>Progress</validType>
+    </input>
+    <input name="Result1" originalType="RasterElement" type="RasterElement" version="4">
+      <validType>RasterElement</validType>
+      <validType>DataElement</validType>
+    </input>
+    <input name="RResult" originalType="RasterElement" type="RasterElement" version="4">
+      <validType>RasterElement</validType>
+      <validType>DataElement</validType>
+    </input>
+    <output name="Result" originalType="RasterElement" type="RasterElement" version="4">
+      <validType>RasterElement</validType>
+      <validType>DataElement</validType>
+    </output>
+  </item>
+
+  <connection inputItem="1" inputNode="1" outputItem="0" outputNode="0"/>
+
+  <connection inputItem="3" inputNode="1" outputItem="0" outputNode="0"/>
+
+  <connection inputItem="4" inputNode="1" outputItem="0" outputNode="0"/>
+
+  <connection inputItem="2" inputNode="1" outputItem="1" outputNode="0"/>
+
+  <connection inputItem="5" inputNode="2" outputItem="2" outputNode="0"/>
+
+  <connection inputItem="8" inputNode="1" outputItem="3" outputNode="0"/>
+
+  <connection inputItem="5" inputNode="1" outputItem="4" outputNode="0"/>
+
+  <connection inputItem="6" inputNode="1" outputItem="5" outputNode="0"/>
+
+  <connection inputItem="7" inputNode="1" outputItem="6" outputNode="0"/>
+
+  <connection inputItem="9" inputNode="2" outputItem="7" outputNode="0"/>
+
+  <connection inputItem="9" inputNode="1" outputItem="8" outputNode="0"/>
+
+</Wizard>
