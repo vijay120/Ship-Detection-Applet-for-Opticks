@@ -185,7 +185,7 @@ bool GAUSS::execute(PlugInArgList* pInArgList, PlugInArgList* pOutArgList)
    }
    Progress* pProgress = pInArgList->getPlugInArgValue<Progress>(Executable::ProgressArg());
    RasterElement* pCube = pInArgList->getPlugInArgValue<RasterElement>(Executable::DataElementArg());
-   pProgress->updateProgress("here??", 0, ERRORS);
+
    if (pCube == NULL)
    {
       std::string msg = "A raster cube must be specified.";
@@ -215,7 +215,7 @@ bool GAUSS::execute(PlugInArgList* pInArgList, PlugInArgList* pOutArgList)
 
    ModelResource<RasterElement> pResultCube(RasterUtilities::createRasterElement(pCube->getName() +
       "DResult", pDesc->getRowCount(), pDesc->getColumnCount(), pDesc->getDataType()));
-   pProgress->updateProgress("here?????", 0, ERRORS);
+   
    if (pResultCube.get() == NULL)
    {
       std::string msg = "A raster cube could not be created.";

@@ -6,42 +6,71 @@
  * The license text is available from   
  * http://www.gnu.org/licenses/lgpl.html
  */
-
+#include "RasterUtilities.h"
+#include "AppConfig.h"
+#include "AppVerify.h"
 #include "DataAccessor.h"
 #include "DataAccessorImpl.h"
 #include "DataRequest.h"
-#include "DesktopServices.h"
 #include "MessageLogResource.h"
 #include "ObjectResource.h"
 #include "PlugInArgList.h"
 #include "PlugInManagerServices.h"
 #include "PlugInRegistration.h"
+#include "PlugInResource.h"
 #include "Progress.h"
 #include "RasterDataDescriptor.h"
 #include "RasterElement.h"
-#include "RasterUtilities.h"
+#include "StringUtilities.h"
+#include "switchOnEncoding.h"
+#include "radondetection.h"
+#include <limits>
+#include "AoiElement.h"
+#include "AppConfig.h"
+#include "AppVerify.h"
+#include "BitMask.h"
+#include "DataAccessor.h"
+#include "DataAccessorImpl.h"
+#include "DataRequest.h"
+#include "DesktopServices.h"
+#include "MessageLogResource.h"
+#include "ModelServices.h"
+#include "ObjectResource.h"
+#include "PlugInArgList.h"
+#include "PlugInManagerServices.h"
+#include "PlugInResource.h"
+#include "PlugInRegistration.h"
+#include "Progress.h"
+#include "RasterDataDescriptor.h"
+#include "RasterElement.h"
+#include "TypeConverter.h"
+#include <limits>
+#include <vector>
+#include <algorithm>
 #include "SpatialDataView.h"
 #include "SpatialDataWindow.h"
-#include "switchOnEncoding.h"
-#include "DENOISE.h"
-#include <limits>
+#include <sstream>
 #include <string>
+#include <math.h>
+#include <QtCore/QStringList>
+#include <QtGui/QInputDialog>
 using namespace std;
 
-REGISTER_PLUGIN_BASIC(OpticksTutorial, DENOISE);
+
+double long pi9=3.14159265;
+
+REGISTER_PLUGIN_BASIC(OpticksTutorial, RADONDETECTION);
 
 namespace
 {
    template<typename T>
-   void conversion(T* pData, double number)
+   void conversion12(T* pData, double number)
    {
 	   *pData=number;
    }
 };
 
-
-
-   double edgeDetection6(DataAccessor pSrcAcc, int row, int col, int rowSize, int colSize)
+   double edgeDetection4(DataAccessor pSrcAcc, int row, int col, int rowSize, int colSize, double threshold)
    {
       int prevCol = std::max(col - 1, 0);
       int prevRow = std::max(row - 1, 0);
@@ -127,56 +156,77 @@ namespace
 
       pSrcAcc->toPixel(nextRow1, nextCol1);
       int row5col5 = pSrcAcc->getColumnAsInteger();
-	 
-	   int g = 0*row1col1 + (-1)*row1col2 + (-1)*row1col3 + (-1)*row1col4 + 0*row1col5 + (-1)*row2col1 + 2*row2col2 + (-4)*row2col3 + 2*row2col4
-		         + (-1)*row2col5 + (-1)*row3col1 + (-4)*row3col2 + 13*row3col3 + (-4)*row3col4 + (-1)*row3col5 + (-1)*row4col1 + 2*row4col2 + (-4)*row4col3
-				 + 2*row4col4+ (-1)*row4col5 + 0*row5col1 + (-1)*row5col2 + (-1)*row5col3 + (-1)*row5col4 + 0*row5col5;
 
-	    double value = g/159.0;
+	  int total = row1col1 + row1col2 + row1col3 + row1col4 + row1col5 + row2col1 + row2col2 + row2col3 + row2col4
+		         + row2col5 + row3col1 + row3col2 + row3col4 + row3col5 + row4col1 + row4col2 + row4col3
+				 + row4col4 + row4col5 + row5col1 + row5col2 + row5col3 + row5col4 + row5col5;
+
+	  double mean = total/24.0;
+
+	  int total_sum = row1col1*row1col1 + row1col2*row1col2 + row1col3*row1col3 + row1col4*row1col4 + row1col5*row1col5 + row2col1*row2col1 + row2col2*row2col2 + row2col3*row2col3 + row2col4*row2col4
+		         + row2col5*row2col5 + row3col1*row3col1 + row3col2*row3col2 + row3col4*row3col4 + row3col5*row3col5 + row4col1*row4col1 + row4col2*row4col2 + row4col3*row4col3
+				 + row4col4*row4col4 + row4col5*row4col5 + row5col1*row5col1 + row5col2*row5col2 + row5col3*row5col3 + row5col4*row5col4 + row5col5*row5col5;
+
+	  double std = sqrt(total_sum / 24.0 - mean * mean);
+
+	  double zstatistic = (row3col3-mean)/std;
+
+	  double value=0;
+
+	  if(row3col3<row1col1 && row3col3<row1col2 && row3col3<row1col3 && row3col3<row1col4 && row3col3<row1col5 &&
+		  row3col3<row2col1 && row3col3<row2col2 && row3col3<row2col3  && row3col3<row2col4 && row3col3<row2col5 &&
+		  row3col3<row3col1 && row3col3<row3col2 && row3col3<row3col4 && row3col3<row3col5 && row3col3<row4col1 &&
+		  row3col3<row4col2 && row3col3<row4col3 && row3col3<row4col4 && row3col3<row4col5 && row3col3<row5col1 &&
+		  row3col3<row5col2 && row3col3<row5col2 && row3col3<row5col3 && row3col3<row5col4 && row3col3<row5col5 && zstatistic<threshold)
+	  {
+		   value=1000.0;
+	  }
+
+	  else
+		   value=0.0;
+
 
 		return value;
+
       
    };
 
 
-DENOISE::DENOISE()
+RADONDETECTION::RADONDETECTION()
 {
-   setDescriptorId("{67B25DF5-725F-44FA-856F-F00B76696BB9}");
-   setName("DENOISE");
-   setVersion("Sample");
-   setDescription("Calculate and return an edge detection raster element for first band "
-      "of the provided raster element.");
+   setDescriptorId("{8023F318-AAFF-4159-87BF-1D49EF8BACAB}");
+   setName("RADONDETECTION");
+   setDescription("Accessing cube data.");
    setCreator("Opticks Community");
+   setVersion("Sample");
    setCopyright("Copyright (C) 2008, Ball Aerospace & Technologies Corp.");
    setProductionStatus(false);
    setType("Sample");
-   setSubtype("Edge Detection");
-   setMenuLocation("[Tutorial]/DENOISE");
+   setSubtype("Statistics");
+   setMenuLocation("[Tutorial]/RADONDETECTION");
    setAbortSupported(true);
 }
 
-DENOISE::~DENOISE()
-{
-}
 
-bool DENOISE::getInputSpecification(PlugInArgList*& pInArgList)
+
+bool RADONDETECTION::getInputSpecification(PlugInArgList* &pInArgList)
 {
    VERIFY(pInArgList = Service<PlugInManagerServices>()->getPlugInArgList());
    pInArgList->addArg<Progress>(Executable::ProgressArg(), NULL, "Progress reporter");
-   pInArgList->addArg<RasterElement>(Executable::DataElementArg(), "Denoise detection of image");
+   pInArgList->addArg<RasterElement>(Executable::DataElementArg(), "RADONDETECTION detection of image");
    return true;
 }
 
-bool DENOISE::getOutputSpecification(PlugInArgList*& pOutArgList)
+bool RADONDETECTION::getOutputSpecification(PlugInArgList* &pOutArgList)
 {
    VERIFY(pOutArgList = Service<PlugInManagerServices>()->getPlugInArgList());
-   pOutArgList->addArg<RasterElement>("Result", NULL);
+   pOutArgList->addArg<RasterElement>("Image1", NULL);
    return true;
 }
 
-bool DENOISE::execute(PlugInArgList* pInArgList, PlugInArgList* pOutArgList)
+bool RADONDETECTION::execute(PlugInArgList* pInArgList, PlugInArgList* pOutArgList)
 {
-   StepResource pStep("Tutorial 5", "app", "219F1882-A59F-4835-BE2A-E83C0C8111EB");
+   StepResource pStep("CFAR", "app5", "750E77E9-7E7E-4FDA-9B00-489B7E05FA43");
    if (pInArgList == NULL || pOutArgList == NULL)
    {
       return false;
@@ -187,22 +237,25 @@ bool DENOISE::execute(PlugInArgList* pInArgList, PlugInArgList* pOutArgList)
    {
       std::string msg = "A raster cube must be specified.";
       pStep->finalize(Message::Failure, msg);
-      if (pProgress != NULL) 
+      if (pProgress != NULL)
       {
          pProgress->updateProgress(msg, 0, ERRORS);
       }
+
       return false;
    }
    RasterDataDescriptor* pDesc = static_cast<RasterDataDescriptor*>(pCube->getDataDescriptor());
    VERIFY(pDesc != NULL);
-
-
    FactoryResource<DataRequest> pRequest;
+   FactoryResource<DataRequest> pRequest2;
+
    pRequest->setInterleaveFormat(BSQ);
-   DataAccessor pSrcAcc = pCube->getDataAccessor(pRequest.release());
+   pRequest2->setInterleaveFormat(BSQ);
+   DataAccessor pAcc = pCube->getDataAccessor(pRequest.release());
+   //DataAccessor pAcc2 = pCube->getDataAccessor(pRequest2.release());
 
    ModelResource<RasterElement> pResultCube(RasterUtilities::createRasterElement(pCube->getName() +
-      "DResult", pDesc->getRowCount(), pDesc->getColumnCount(), pDesc->getDataType()));
+   "Image1", pDesc->getRowCount(), pDesc->getColumnCount(), pDesc->getDataType()));
 
    if (pResultCube.get() == NULL)
    {
@@ -217,6 +270,20 @@ bool DENOISE::execute(PlugInArgList* pInArgList, PlugInArgList* pOutArgList)
    FactoryResource<DataRequest> pResultRequest;
    pResultRequest->setWritable(true);
    DataAccessor pDestAcc = pResultCube->getDataAccessor(pResultRequest.release());
+
+   
+   QStringList Names("5.0");
+   QString value = QInputDialog::getItem(Service<DesktopServices>()->getMainWidget(),
+            "Input a threshold value", "Input a threshold (eg. 5.5)", Names);
+   
+   std::string strAoi = value.toStdString();
+   std::istringstream stm;
+   stm.str(strAoi);
+   //stm >> PFA;
+   double  threshold = 0;
+   stm >> threshold;
+   
+
    int rowSize= pDesc->getRowCount();
    int colSize = pDesc->getColumnCount();
    int zero=0;
@@ -230,45 +297,52 @@ bool DENOISE::execute(PlugInArgList* pInArgList, PlugInArgList* pOutArgList)
 	  int nextCol1= 0;
 	  int nextRow1= 0;
 
-   for (unsigned int row = 0; row < pDesc->getRowCount(); ++row)
-   {
-      if (pProgress != NULL)
-      {
-         pProgress->updateProgress("Calculating result", row * 100 / pDesc->getRowCount(), NORMAL);
-      }
-      if (isAborted())
-      {
-         std::string msg = getName() + " has been aborted.";
-         pStep->finalize(Message::Abort, msg);
-         if (pProgress != NULL)
-         {
-            pProgress->updateProgress(msg, 0, ABORT);
-         }
-         return false;
-      }
-      if (!pDestAcc.isValid())
-      {
-         std::string msg = "Unable to access the cube data.";
-         pStep->finalize(Message::Failure, msg);
-         if (pProgress != NULL) 
-         {
-            pProgress->updateProgress(msg, 0, ERRORS);
-         }
-         return false;
-      }
-      for (unsigned int col = 0; col < pDesc->getColumnCount(); ++col)
-      {
-		  
-		  double value=edgeDetection6(pSrcAcc, row, col, pDesc->getRowCount(), pDesc->getColumnCount());
-          switchOnEncoding(pDesc->getDataType(), conversion, pDestAcc->getColumn(), value);
-          pDestAcc->nextColumn();
-		  
-      }
+   	int total5=0;
+	int total_sq5=0;
+	int count5=0;
 
-      pDestAcc->nextRow();
-   }
+   	for(int col=0; col<colSize; col++)
+	{
+		for(int row=0; row<rowSize; row++)
+		{
 
-   if (!isBatch())
+				for(int i=row-5; i<row+6; i++)
+				{
+					int j=std::max(0,i);
+					int k =std::min(rowSize-1,j);
+					pAcc->toPixel(k,col);
+					int a = pAcc->getColumnAsDouble();
+					total5+=a;
+					total_sq5+=a*a;
+					count5+=1;
+				}
+
+				double mean = total5/count5;
+				double product = (total_sq5/count5)-(mean*mean);
+				double std=sqrt(product);
+
+				pDestAcc->toPixel(row,col);
+
+
+				if(std>threshold)
+				{
+					switchOnEncoding(pDesc->getDataType(), conversion12, pDestAcc->getColumn(), 1000);
+				}
+
+
+				else
+				{
+					switchOnEncoding(pDesc->getDataType(), conversion12, pDestAcc->getColumn(), 0);
+				}
+
+				total5=0;
+				total_sq5=0;
+				count5=0;
+			}
+
+	}
+	
+      if (!isBatch())
    {
       Service<DesktopServices> pDesktop;
 
@@ -293,12 +367,12 @@ bool DENOISE::execute(PlugInArgList* pInArgList, PlugInArgList* pOutArgList)
 
    if (pProgress != NULL)
    {
-
-      pProgress->updateProgress("DENOISE is compete.", 100, NORMAL);
+      pProgress->updateProgress("CFAR is compete.", 100, NORMAL);
    }
 
-   pOutArgList->setPlugInArgValue("Result", pResultCube.release());
+   pOutArgList->setPlugInArgValue("Image1", pResultCube.release());
 
    pStep->finalize();
    return true;
+   
 }

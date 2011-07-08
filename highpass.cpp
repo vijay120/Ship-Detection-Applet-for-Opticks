@@ -133,7 +133,7 @@ namespace
 				 + row4col4 + row4col5 + row5col1 + row5col2 + row5col3 + row5col4 + row5col5;
 
 
-	    double value = g;
+	    double value = g/159.0;
 
 		return value;
 
@@ -185,7 +185,7 @@ bool HIGHPASS::execute(PlugInArgList* pInArgList, PlugInArgList* pOutArgList)
    }
    Progress* pProgress = pInArgList->getPlugInArgValue<Progress>(Executable::ProgressArg());
    RasterElement* pCube = pInArgList->getPlugInArgValue<RasterElement>(Executable::DataElementArg());
-   pProgress->updateProgress("here??", 0, ERRORS);
+
    if (pCube == NULL)
    {
       std::string msg = "A raster cube must be specified.";
@@ -198,16 +198,6 @@ bool HIGHPASS::execute(PlugInArgList* pInArgList, PlugInArgList* pOutArgList)
    }
    RasterDataDescriptor* pDesc = static_cast<RasterDataDescriptor*>(pCube->getDataDescriptor());
    VERIFY(pDesc != NULL);
-   if (pDesc->getDataType() == INT4SCOMPLEX || pDesc->getDataType() == FLT8COMPLEX)
-   {
-      std::string msg = "Edge detection cannot be performed on complex types.";
-      pStep->finalize(Message::Failure, msg);
-      if (pProgress != NULL) 
-      {
-         pProgress->updateProgress(msg, 0, ERRORS);
-      }
-      return false;
-   }
 
    FactoryResource<DataRequest> pRequest;
    pRequest->setInterleaveFormat(BSQ);
@@ -215,7 +205,7 @@ bool HIGHPASS::execute(PlugInArgList* pInArgList, PlugInArgList* pOutArgList)
 
    ModelResource<RasterElement> pResultCube(RasterUtilities::createRasterElement(pCube->getName() +
       "DResult", pDesc->getRowCount(), pDesc->getColumnCount(), pDesc->getDataType()));
-   pProgress->updateProgress("here?????", 0, ERRORS);
+
    if (pResultCube.get() == NULL)
    {
       std::string msg = "A raster cube could not be created.";
@@ -305,7 +295,7 @@ bool HIGHPASS::execute(PlugInArgList* pInArgList, PlugInArgList* pOutArgList)
 
    if (pProgress != NULL)
    {
-      pProgress->updateProgress("DENOISE is compete.", 100, NORMAL);
+      pProgress->updateProgress("HighPass is compete.", 100, NORMAL);
    }
 
    pOutArgList->setPlugInArgValue("Result", pResultCube.release());
