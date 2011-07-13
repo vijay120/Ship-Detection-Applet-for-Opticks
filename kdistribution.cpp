@@ -684,9 +684,41 @@ bool KDISTRIBUTION::execute(PlugInArgList* pInArgList, PlugInArgList* pOutArgLis
    }
 
 
+
       // Create a GCP layer
-   if (pCube->isGeoreferenced() == true)
-   {
+
+/*
+      SpatialDataWindow* pWindow = dynamic_cast<SpatialDataWindow*>(Service<DesktopServices>()->createWindow(pResultCube.get()->getName(), SPATIAL_DATA_WINDOW));
+
+   SpatialDataView* pView = pWindow->getSpatialDataView();
+   */
+
+
+      Service<DesktopServices> pDesktop;
+
+      SpatialDataWindow* pWindow = static_cast<SpatialDataWindow*>(pDesktop->createWindow(pResultCube->getName(),
+         SPATIAL_DATA_WINDOW));
+
+      SpatialDataView* pView = (pWindow == NULL) ? NULL : pWindow->getSpatialDataView();
+      if (pView == NULL)
+      {
+         std::string msg = "Unable to create view.";
+         pStep->finalize(Message::Failure, msg);
+         if (pProgress != NULL) 
+         {
+            pProgress->updateProgress(msg, 0, ERRORS);
+         }
+         return false;
+      }
+
+      pView->setPrimaryRasterElement(pResultCube.get());
+      pView->createLayer(RASTER, pResultCube.get());
+   
+
+	  // Create the GCP list
+	     if (pCube->isGeoreferenced() == true)
+		 {
+   
       const vector<DimensionDescriptor>& rows = pDescriptor->getRows();
       const vector<DimensionDescriptor>& columns = pDescriptor->getColumns();
       if ((rows.empty() == false) && (columns.empty() == false))
@@ -743,7 +775,7 @@ bool KDISTRIBUTION::execute(PlugInArgList* pInArgList, PlugInArgList* pOutArgLis
          lrPoint.mPixel = LocationType(chipEndCol, chipEndRow);
          centerPoint.mPixel = LocationType((chipStartCol + chipEndCol) / 2, (chipStartRow + chipEndRow) / 2);
 
-         // Create the GCP list
+         
          Service<ModelServices> pModel;
 
          GcpList* pGcpList = static_cast<GcpList*>(pModel->createElement("Corner Coordinates",
@@ -759,34 +791,11 @@ bool KDISTRIBUTION::execute(PlugInArgList* pInArgList, PlugInArgList* pOutArgLis
 
             pGcpList->addPoints(gcps);
 
+			pView->createLayer(GCP_LAYER, pGcpList);
+
+
 		 }
-		 
-	  
 	  }
-   }
-
-
-      if (!isBatch())
-   {
-      Service<DesktopServices> pDesktop;
-
-      SpatialDataWindow* pWindow = static_cast<SpatialDataWindow*>(pDesktop->createWindow(pResultCube->getName(),
-         SPATIAL_DATA_WINDOW));
-
-      SpatialDataView* pView = (pWindow == NULL) ? NULL : pWindow->getSpatialDataView();
-      if (pView == NULL)
-      {
-         std::string msg = "Unable to create view.";
-         pStep->finalize(Message::Failure, msg);
-         if (pProgress != NULL) 
-         {
-            pProgress->updateProgress(msg, 0, ERRORS);
-         }
-         return false;
-      }
-
-      pView->setPrimaryRasterElement(pResultCube.get());
-      pView->createLayer(RASTER, pResultCube.get());
    }
 
    if (pProgress != NULL)
