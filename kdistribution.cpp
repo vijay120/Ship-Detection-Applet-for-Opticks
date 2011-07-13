@@ -6,6 +6,33 @@
  * The license text is available from   
  * http://www.gnu.org/licenses/lgpl.html
  */
+
+
+#include "AppVerify.h"
+#include "DesktopServices.h"
+#include "DimensionDescriptor.h"
+#include "GcpList.h"
+#include "LayerList.h"
+#include "ModelServices.h"
+#include "ObjectResource.h"
+#include "RasterDataDescriptor.h"
+#include "RasterElement.h"
+#include "RasterFileDescriptor.h"
+#include "RasterLayer.h"
+#include "RasterUtilities.h"
+#include "SpatialDataView.h"
+#include "SpatialDataWindow.h"
+
+
+#include <QtCore/QEvent>
+#include <QtCore/QFileInfo>
+#include <QtGui/QGroupBox>
+#include <QtGui/QLayout>
+#include <QtGui/QMessageBox>
+#include <QtGui/QPushButton>
+#include "GcpList.h"
+#include "LayerList.h"
+#include "ModelServices.h"
 #include "RasterUtilities.h"
 #include "AppConfig.h"
 #include "AppVerify.h"
@@ -193,7 +220,7 @@ bool KDISTRIBUTION::getInputSpecification(PlugInArgList* &pInArgList)
 bool KDISTRIBUTION::getOutputSpecification(PlugInArgList* &pOutArgList)
 {
    VERIFY(pOutArgList = Service<PlugInManagerServices>()->getPlugInArgList());
-   pOutArgList->addArg<double>("Result", NULL);
+   pOutArgList->addArg<RasterElement>("Result", NULL);
    return true;
 }
 
@@ -224,6 +251,8 @@ bool KDISTRIBUTION::execute(PlugInArgList* pInArgList, PlugInArgList* pOutArgLis
    FactoryResource<DataRequest> pRequest;
    FactoryResource<DataRequest> pRequest2;
 
+   
+
    pRequest->setInterleaveFormat(BSQ);
    pRequest2->setInterleaveFormat(BSQ);
    DataAccessor pAcc = pCube->getDataAccessor(pRequest.release());
@@ -248,6 +277,7 @@ bool KDISTRIBUTION::execute(PlugInArgList* pInArgList, PlugInArgList* pOutArgLis
    FactoryResource<DataRequest> pResultRequest;
    pResultRequest->setWritable(true);
    DataAccessor pDestAcc = pResultCube->getDataAccessor(pResultRequest.release());
+   const RasterDataDescriptor* pDescriptor = dynamic_cast<const RasterDataDescriptor*>(pCube->getDataDescriptor());
 
 
   
@@ -653,6 +683,89 @@ bool KDISTRIBUTION::execute(PlugInArgList* pInArgList, PlugInArgList* pOutArgLis
 
    }
 
+
+      // Create a GCP layer
+   if (pCube->isGeoreferenced() == true)
+   {
+      const vector<DimensionDescriptor>& rows = pDescriptor->getRows();
+      const vector<DimensionDescriptor>& columns = pDescriptor->getColumns();
+      if ((rows.empty() == false) && (columns.empty() == false))
+      {
+         // Get the geocoordinates at the chip corners
+		  /*
+         VERIFYNRV(rows.front().isActiveNumberValid() == true);
+         VERIFYNRV(rows.back().isActiveNumberValid() == true);
+         VERIFYNRV(columns.front().isActiveNumberValid() == true);
+         VERIFYNRV(columns.back().isActiveNumberValid() == true);
+		 */
+
+         unsigned int startRow = rows.front().getActiveNumber();
+         unsigned int endRow = rows.back().getActiveNumber();
+         unsigned int startCol = columns.front().getActiveNumber();
+         unsigned int endCol = columns.back().getActiveNumber();
+
+         GcpPoint ulPoint;
+         ulPoint.mPixel = LocationType(startCol, startRow);
+         ulPoint.mCoordinate = pCube->convertPixelToGeocoord(ulPoint.mPixel);
+
+         GcpPoint urPoint;
+         urPoint.mPixel = LocationType(endCol, startRow);
+         urPoint.mCoordinate = pCube->convertPixelToGeocoord(urPoint.mPixel);
+
+         GcpPoint llPoint;
+         llPoint.mPixel = LocationType(startCol, endRow);
+         llPoint.mCoordinate = pCube->convertPixelToGeocoord(llPoint.mPixel);
+
+         GcpPoint lrPoint;
+         lrPoint.mPixel = LocationType(endCol, endRow);
+         lrPoint.mCoordinate = pCube->convertPixelToGeocoord(lrPoint.mPixel);
+
+         GcpPoint centerPoint;
+         centerPoint.mPixel = LocationType((startCol + endCol) / 2, (startRow + endRow) / 2);
+         centerPoint.mCoordinate = pCube->convertPixelToGeocoord(centerPoint.mPixel);
+
+         // Reset the coordinates to be in active numbers relative to the chip
+         const vector<DimensionDescriptor>& chipRows = pDescriptor->getRows();
+         const vector<DimensionDescriptor>& chipColumns = pDescriptor->getColumns();
+		 /*
+         VERIFYNRV(chipRows.front().isActiveNumberValid() == true);
+         VERIFYNRV(chipRows.back().isActiveNumberValid() == true);
+         VERIFYNRV(chipColumns.front().isActiveNumberValid() == true);
+         VERIFYNRV(chipColumns.back().isActiveNumberValid() == true);
+		 */
+         unsigned int chipStartRow = chipRows.front().getActiveNumber();
+         unsigned int chipEndRow = chipRows.back().getActiveNumber();
+         unsigned int chipStartCol = chipColumns.front().getActiveNumber();
+         unsigned int chipEndCol = chipColumns.back().getActiveNumber();
+         ulPoint.mPixel = LocationType(chipStartCol, chipStartRow);
+         urPoint.mPixel = LocationType(chipEndCol, chipStartRow);
+         llPoint.mPixel = LocationType(chipStartCol, chipEndRow);
+         lrPoint.mPixel = LocationType(chipEndCol, chipEndRow);
+         centerPoint.mPixel = LocationType((chipStartCol + chipEndCol) / 2, (chipStartRow + chipEndRow) / 2);
+
+         // Create the GCP list
+         Service<ModelServices> pModel;
+
+         GcpList* pGcpList = static_cast<GcpList*>(pModel->createElement("Corner Coordinates",
+            TypeConverter::toString<GcpList>(), pResultCube.get()));
+         if (pGcpList != NULL)
+         {
+            list<GcpPoint> gcps;
+            gcps.push_back(ulPoint);
+            gcps.push_back(urPoint);
+            gcps.push_back(llPoint);
+            gcps.push_back(lrPoint);
+            gcps.push_back(centerPoint);
+
+            pGcpList->addPoints(gcps);
+
+		 }
+		 
+	  
+	  }
+   }
+
+
       if (!isBatch())
    {
       Service<DesktopServices> pDesktop;
@@ -681,7 +794,7 @@ bool KDISTRIBUTION::execute(PlugInArgList* pInArgList, PlugInArgList* pOutArgLis
       pProgress->updateProgress("CFAR is compete.", 100, NORMAL);
    }
 
-   pOutArgList->setPlugInArgValue("CFAR_result", pResultCube.release());
+   pOutArgList->setPlugInArgValue("Result", pResultCube.release());
 
    pStep->finalize();
    return true;
