@@ -15,6 +15,26 @@
     </output>
   </item>
 
+  <item batch="false" batchSupported="true" name="Georeference" type="Algorithm">
+    <location>196 113</location>
+    <input name="Progress" originalType="Progress" type="Progress" version="4">
+      <validType>Progress</validType>
+    </input>
+    <input name="Data Element" originalType="RasterElement" type="RasterElement" version="4">
+      <validType>RasterElement</validType>
+      <validType>DataElement</validType>
+    </input>
+    <input name="View" originalType="SpatialDataView" type="SpatialDataView" version="4">
+      <validType>SpatialDataView</validType>
+      <validType>PerspectiveView</validType>
+      <validType>View</validType>
+    </input>
+    <output name="Latitude/Longitude Layer" originalType="LatLonLayer" type="LatLonLayer" version="4">
+      <validType>LatLonLayer</validType>
+      <validType>Layer</validType>
+    </output>
+  </item>
+
   <item batch="false" batchSupported="true" name="DENOISE" type="Sample">
     <location>181 388</location>
     <input name="Progress" originalType="Progress" type="Progress" version="4">
@@ -32,21 +52,6 @@
 
   <item batch="false" batchSupported="true" name="HIGHPASS" type="Sample">
     <location>337 374</location>
-    <input name="Progress" originalType="Progress" type="Progress" version="4">
-      <validType>Progress</validType>
-    </input>
-    <input name="Data Element" originalType="RasterElement" type="RasterElement" version="4">
-      <validType>RasterElement</validType>
-      <validType>DataElement</validType>
-    </input>
-    <output name="Result" originalType="RasterElement" type="RasterElement" version="4">
-      <validType>RasterElement</validType>
-      <validType>DataElement</validType>
-    </output>
-  </item>
-
-  <item batch="false" batchSupported="true" name="kdistribution" type="Sample">
-    <location>71 488</location>
     <input name="Progress" originalType="Progress" type="Progress" version="4">
       <validType>Progress</validType>
     </input>
@@ -124,6 +129,41 @@
     </output>
   </item>
 
+  <item batch="false" batchSupported="true" name="kdistribution" type="Sample">
+    <location>71 488</location>
+    <input name="Progress" originalType="Progress" type="Progress" version="4">
+      <validType>Progress</validType>
+    </input>
+    <input name="Data Element" originalType="RasterElement" type="RasterElement" version="4">
+      <validType>RasterElement</validType>
+      <validType>DataElement</validType>
+    </input>
+    <output name="Result" originalType="RasterElement" type="RasterElement" version="4">
+      <validType>RasterElement</validType>
+      <validType>DataElement</validType>
+    </output>
+  </item>
+
+  <item batch="false" batchSupported="true" name="Georeference" type="Algorithm">
+    <location>230 581</location>
+    <input name="Progress" originalType="Progress" type="Progress" version="4">
+      <validType>Progress</validType>
+    </input>
+    <input name="Data Element" originalType="RasterElement" type="RasterElement" version="4">
+      <validType>RasterElement</validType>
+      <validType>DataElement</validType>
+    </input>
+    <input name="View" originalType="SpatialDataView" type="SpatialDataView" version="4">
+      <validType>SpatialDataView</validType>
+      <validType>PerspectiveView</validType>
+      <validType>View</validType>
+    </input>
+    <output name="Latitude/Longitude Layer" originalType="LatLonLayer" type="LatLonLayer" version="4">
+      <validType>LatLonLayer</validType>
+      <validType>Layer</validType>
+    </output>
+  </item>
+
   <item batch="false" batchSupported="true" name="MORPH" type="Sample">
     <location>328 490</location>
     <input name="Progress" originalType="Progress" type="Progress" version="4">
@@ -136,6 +176,26 @@
     <output name="Result1" originalType="RasterElement" type="RasterElement" version="4">
       <validType>RasterElement</validType>
       <validType>DataElement</validType>
+    </output>
+  </item>
+
+  <item batch="false" batchSupported="true" name="Georeference" type="Algorithm">
+    <location>498 570</location>
+    <input name="Progress" originalType="Progress" type="Progress" version="4">
+      <validType>Progress</validType>
+    </input>
+    <input name="Data Element" originalType="RasterElement" type="RasterElement" version="4">
+      <validType>RasterElement</validType>
+      <validType>DataElement</validType>
+    </input>
+    <input name="View" originalType="SpatialDataView" type="SpatialDataView" version="4">
+      <validType>SpatialDataView</validType>
+      <validType>PerspectiveView</validType>
+      <validType>View</validType>
+    </input>
+    <output name="Latitude/Longitude Layer" originalType="LatLonLayer" type="LatLonLayer" version="4">
+      <validType>LatLonLayer</validType>
+      <validType>Layer</validType>
     </output>
   </item>
 
@@ -158,17 +218,17 @@
     </output>
   </item>
 
-  <connection inputItem="1" inputNode="1" outputItem="0" outputNode="0"/>
+  <connection inputItem="2" inputNode="1" outputItem="0" outputNode="0"/>
 
-  <connection inputItem="3" inputNode="1" outputItem="0" outputNode="0"/>
+  <connection inputItem="8" inputNode="1" outputItem="0" outputNode="0"/>
 
   <connection inputItem="4" inputNode="1" outputItem="0" outputNode="0"/>
 
-  <connection inputItem="2" inputNode="1" outputItem="1" outputNode="0"/>
+  <connection inputItem="1" inputNode="1" outputItem="0" outputNode="0"/>
 
-  <connection inputItem="5" inputNode="2" outputItem="2" outputNode="0"/>
+  <connection inputItem="3" inputNode="1" outputItem="2" outputNode="0"/>
 
-  <connection inputItem="8" inputNode="1" outputItem="3" outputNode="0"/>
+  <connection inputItem="5" inputNode="2" outputItem="3" outputNode="0"/>
 
   <connection inputItem="5" inputNode="1" outputItem="4" outputNode="0"/>
 
@@ -176,8 +236,14 @@
 
   <connection inputItem="7" inputNode="1" outputItem="6" outputNode="0"/>
 
-  <connection inputItem="9" inputNode="2" outputItem="7" outputNode="0"/>
+  <connection inputItem="12" inputNode="2" outputItem="7" outputNode="0"/>
+
+  <connection inputItem="10" inputNode="1" outputItem="8" outputNode="0"/>
 
   <connection inputItem="9" inputNode="1" outputItem="8" outputNode="0"/>
+
+  <connection inputItem="12" inputNode="1" outputItem="10" outputNode="0"/>
+
+  <connection inputItem="11" inputNode="1" outputItem="10" outputNode="0"/>
 
 </Wizard>

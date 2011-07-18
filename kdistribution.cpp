@@ -24,15 +24,6 @@
 #include "SpatialDataWindow.h"
 
 
-#include <QtCore/QEvent>
-#include <QtCore/QFileInfo>
-#include <QtGui/QGroupBox>
-#include <QtGui/QLayout>
-#include <QtGui/QMessageBox>
-#include <QtGui/QPushButton>
-#include "GcpList.h"
-#include "LayerList.h"
-#include "ModelServices.h"
 #include "RasterUtilities.h"
 #include "AppConfig.h"
 #include "AppVerify.h"
@@ -259,10 +250,8 @@ bool KDISTRIBUTION::execute(PlugInArgList* pInArgList, PlugInArgList* pOutArgLis
    DataAccessor pAcc2 = pCube->getDataAccessor(pRequest2.release());
 
 
-   
-
    ModelResource<RasterElement> pResultCube(RasterUtilities::createRasterElement(pCube->getName() +
-   "CFAR result", pDesc->getRowCount(), pDesc->getColumnCount(), pDesc->getDataType()));
+   "Result", pDesc->getRowCount(), pDesc->getColumnCount(), pDesc->getDataType()));
 
    if (pResultCube.get() == NULL)
    {
@@ -713,11 +702,13 @@ bool KDISTRIBUTION::execute(PlugInArgList* pInArgList, PlugInArgList* pOutArgLis
 
       pView->setPrimaryRasterElement(pResultCube.get());
       pView->createLayer(RASTER, pResultCube.get());
-   
+
 
 	  // Create the GCP list
 	     if (pCube->isGeoreferenced() == true)
 		 {
+
+
    
       const vector<DimensionDescriptor>& rows = pDescriptor->getRows();
       const vector<DimensionDescriptor>& columns = pDescriptor->getColumns();
@@ -756,15 +747,16 @@ bool KDISTRIBUTION::execute(PlugInArgList* pInArgList, PlugInArgList* pOutArgLis
          centerPoint.mPixel = LocationType((startCol + endCol) / 2, (startRow + endRow) / 2);
          centerPoint.mCoordinate = pCube->convertPixelToGeocoord(centerPoint.mPixel);
 
+		 /*
          // Reset the coordinates to be in active numbers relative to the chip
          const vector<DimensionDescriptor>& chipRows = pDescriptor->getRows();
          const vector<DimensionDescriptor>& chipColumns = pDescriptor->getColumns();
-		 /*
+		 
          VERIFYNRV(chipRows.front().isActiveNumberValid() == true);
          VERIFYNRV(chipRows.back().isActiveNumberValid() == true);
          VERIFYNRV(chipColumns.front().isActiveNumberValid() == true);
          VERIFYNRV(chipColumns.back().isActiveNumberValid() == true);
-		 */
+		 
          unsigned int chipStartRow = chipRows.front().getActiveNumber();
          unsigned int chipEndRow = chipRows.back().getActiveNumber();
          unsigned int chipStartCol = chipColumns.front().getActiveNumber();
@@ -774,7 +766,7 @@ bool KDISTRIBUTION::execute(PlugInArgList* pInArgList, PlugInArgList* pOutArgLis
          llPoint.mPixel = LocationType(chipStartCol, chipEndRow);
          lrPoint.mPixel = LocationType(chipEndCol, chipEndRow);
          centerPoint.mPixel = LocationType((chipStartCol + chipEndCol) / 2, (chipStartRow + chipEndRow) / 2);
-
+		 */
          
          Service<ModelServices> pModel;
 
@@ -792,8 +784,6 @@ bool KDISTRIBUTION::execute(PlugInArgList* pInArgList, PlugInArgList* pOutArgLis
             pGcpList->addPoints(gcps);
 
 			pView->createLayer(GCP_LAYER, pGcpList);
-
-
 		 }
 	  }
    }
