@@ -6,6 +6,8 @@
  * The license text is available from   
  * http://www.gnu.org/licenses/lgpl.html
  */
+#include <Location.h>
+#include "AoiElement.h"
 #include "RasterUtilities.h"
 #include "AppConfig.h"
 #include "AppVerify.h"
@@ -25,6 +27,7 @@
 #include "switchOnEncoding.h"
 #include "MORPH.h"
 #include <limits>
+#include "AoiLayer.h"
 #include "AoiElement.h"
 #include "AppConfig.h"
 #include "AppVerify.h"
@@ -104,6 +107,8 @@ MORPH::MORPH()
 bool MORPH::getInputSpecification(PlugInArgList* &pInArgList)
 {
    VERIFY(pInArgList = Service<PlugInManagerServices>()->getPlugInArgList());
+   VERIFY(pInArgList->addArg<SpatialDataView>(Executable::ViewArg(),
+      "If this optional view is specified, an AOI layer will be created and added to the view."));
    pInArgList->addArg<Progress>(Executable::ProgressArg(), NULL, "Progress reporter");
    pInArgList->addArg<RasterElement>("Result");
    return true;
@@ -112,7 +117,8 @@ bool MORPH::getInputSpecification(PlugInArgList* &pInArgList)
 bool MORPH::getOutputSpecification(PlugInArgList* &pOutArgList)
 {
    VERIFY(pOutArgList = Service<PlugInManagerServices>()->getPlugInArgList());
-   pOutArgList->addArg<RasterElement>("Result1", NULL);
+   VERIFY(pOutArgList->addArg<AoiElement>("Result", "The new AOI."));
+   VERIFY(pOutArgList->addArg<AoiLayer>("Result Layer", "The new AOI layer."));
    return true;
 }
 
@@ -162,6 +168,8 @@ bool MORPH::execute(PlugInArgList* pInArgList, PlugInArgList* pOutArgList)
    FactoryResource<DataRequest> pResultRequest;
    pResultRequest->setWritable(true);
    DataAccessor pDestAcc2 = pResultCube->getDataAccessor(pResultRequest.release());
+
+   FactoryResource<BitMask> pBitmask;
   
    int upperLeftVal = 0;
    int upVal = 0;
@@ -190,12 +198,10 @@ bool MORPH::execute(PlugInArgList* pInArgList, PlugInArgList* pOutArgList)
    std::string strAoi = value.toStdString();
    std::istringstream stm;
    stm.str(strAoi);
-   //stm >> PFA;
+
    
    stm >> threshold;
-   
 
-   //double long threshold = threshold_calculator(PFA);
 
    for (int row = 0; row < rowSize; ++row)
    {
@@ -239,12 +245,10 @@ bool MORPH::execute(PlugInArgList* pInArgList, PlugInArgList* pOutArgList)
 
 	  pAcc2->toPixel(prevRow, prevCol);
       upperLeftVal = pAcc2->getColumnAsDouble();
-	  	  if(upperLeftVal>0)
+	  if(upperLeftVal>0)
 	  {
 			  count+=1;
 	  }
-
-	  
 
       pAcc2->toPixel(prevRow, col);
       upVal = pAcc2->getColumnAsDouble();
@@ -252,7 +256,6 @@ bool MORPH::execute(PlugInArgList* pInArgList, PlugInArgList* pOutArgList)
 	  {
 			  count+=1;
 	  }
-
 
       pAcc2->toPixel(prevRow, nextCol);
       upperRightVal = pAcc2->getColumnAsDouble();
@@ -296,27 +299,26 @@ bool MORPH::execute(PlugInArgList* pInArgList, PlugInArgList* pOutArgList)
 			  count+=1;
 		  }
 
-
-
-		  std::string s;
+		std::string s;
 		std::stringstream out;
 		out << count;
 		s = out.str();
-		//pProgress->updateProgress(s, 0, ERRORS);
-
-
 
 	  pDestAcc2->toPixel(row,col);
 
       if(count>threshold)
 	  {
-		  switchOnEncoding(pDesc->getDataType(), conversion, pDestAcc2->getColumn(), 1000.0);
+		  pBitmask->setPixel(col, row, true);
+		  //switchOnEncoding(pDesc->getDataType(), conversion, pDestAcc2->getColumn(), 1000.0);
 	  }
 
+	  /*
 	  else
 	  {
-		  switchOnEncoding(pDesc->getDataType(), conversion, pDestAcc2->getColumn(), 0.0);
+		  continue;
+		  //switchOnEncoding(pDesc->getDataType(), conversion, pDestAcc2->getColumn(), 0.0);
 	  }
+	  */
 
 	  count=0;
 
@@ -326,7 +328,57 @@ bool MORPH::execute(PlugInArgList* pInArgList, PlugInArgList* pOutArgList)
 
    }
 
+   std::string aoiName = pDesc->getName() + "_aoi";
+   ModelResource<AoiElement> pAoi(aoiName, pCube);
+   Service<ModelServices>()->destroyElement(Service<ModelServices>()->getElement(aoiName, TypeConverter::toString<AoiElement>(), pCube));
+   pAoi = ModelResource<AoiElement>(aoiName, pCube);
 
+
+
+   pAoi->addPoints(pBitmask.get());
+   AoiLayer* pLayer = NULL;
+   pProgress->updateProgress("whatnick!", 0, ERRORS);
+   SpatialDataView* mpView = pInArgList->getPlugInArgValue<SpatialDataView>(Executable::ViewArg());
+   //SpatialDataView* mpView = pInArgList->getPlugInArgValue<SpatialDataView>("Result");
+   pLayer = static_cast<AoiLayer*>(mpView->createLayer(AOI_LAYER, pAoi.get()));
+   pProgress->updateProgress("what!", 0, ERRORS);
+   
+   //SpatialDataView* mpView = pInArgList->getPlugInArgValue<SpatialDataView>(Executable::ViewArg());
+   //Service<DesktopServices> pDesktop;
+
+
+      //SpatialDataWindow* pWindow = static_cast<SpatialDataWindow*>(pDesktop->createWindow(pResultCube->getName(),
+        // SPATIAL_DATA_WINDOW));
+   /*
+      SpatialDataView* pView = (mpView == NULL) ? NULL : mpView->getSpatialDataView();
+      if (pView == NULL)
+      {
+         std::string msg = "Unable to create view.";
+         pStep->finalize(Message::Failure, msg);
+         if (pProgress != NULL) 
+         {
+            pProgress->updateProgress(msg, 0, ERRORS);
+         }
+         return false;
+	  }
+
+	  */
+   //pLayer = static_cast<AoiLayer*>(pView->createLayer(AOI_LAYER, pAoi.get()));
+
+   
+   if (pOutArgList != NULL)
+   {
+      pOutArgList->setPlugInArgValue("Result", pAoi.get());
+      if (pLayer != NULL)
+      {
+         pOutArgList->setPlugInArgValue("Result Layer", pLayer);
+      }
+   }
+
+   pProgress->updateProgress("wh2at!", 0, ERRORS);
+   pStep->finalize();
+   pAoi.release();
+   /*
       Service<DesktopServices> pDesktop;
 
       SpatialDataWindow* pWindow = static_cast<SpatialDataWindow*>(pDesktop->createWindow(pResultCube->getName(),
@@ -363,6 +415,8 @@ bool MORPH::execute(PlugInArgList* pInArgList, PlugInArgList* pOutArgList)
          VERIFYNRV(columns.front().isActiveNumberValid() == true);
          VERIFYNRV(columns.back().isActiveNumberValid() == true);
 		 */
+
+   /*
 
          unsigned int startRow = rows.front().getActiveNumber();
          unsigned int endRow = rows.back().getActiveNumber();
@@ -409,7 +463,7 @@ bool MORPH::execute(PlugInArgList* pInArgList, PlugInArgList* pOutArgList)
          lrPoint.mPixel = LocationType(chipEndCol, chipEndRow);
          centerPoint.mPixel = LocationType((chipStartCol + chipEndCol) / 2, (chipStartRow + chipEndRow) / 2);
 		 */
-         
+         /*
          Service<ModelServices> pModel;
 
          GcpList* pGcpList = static_cast<GcpList*>(pModel->createElement("Corner Coordinates",
@@ -427,8 +481,11 @@ bool MORPH::execute(PlugInArgList* pInArgList, PlugInArgList* pOutArgList)
 
 			pView->createLayer(GCP_LAYER, pGcpList);
 		 }
+
+		 
 	  }
    }
+   
 
    if (pProgress != NULL)
    {
@@ -438,6 +495,8 @@ bool MORPH::execute(PlugInArgList* pInArgList, PlugInArgList* pOutArgList)
    pOutArgList->setPlugInArgValue("Result1", pResultCube.release());
 
    pStep->finalize();
+
+   */
    return true;
    
 }
